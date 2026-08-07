@@ -112,29 +112,35 @@ export default function Home() {
   }
 
   return (
-    <div style={{ textAlign: "center" }}>
+    <div className="pagina" style={{ textAlign: "center" }}>
       <header>
-        <img src="/logo.png" alt="Logo Astroturismo" />
-        <h1>Astroturismo Inteligente</h1>
-        <p>Contacto: contacto@astroturismo.org</p>
-        <nav>
-          <button onClick={() => alert("Esta app permite planificar noches astronómicas.")}>Descripción</button>
-          <button onClick={() => alert("Somos un equipo dedicado a la divulgación científica.")}>Quiénes somos</button>
-          <button onClick={() => alert("Los datos se obtienen de varias fuentes y se combinan.")}>Precisión de los datos</button>
+        <img src="/logo.png" alt="Logo Astroturismo" className="logo" />
+        <h1 className="titulo">Astroturismo Inteligente</h1>
+        <p className="contacto">Contacto: info@astroturismo.com.ar</p>
+        <nav className="nav-botones">
+          <button className="boton-naranja" onClick={() => alert("Esta app permite planificar noches astronómicas.")}>
+            Descripción
+          </button>
+          <button className="boton-naranja" onClick={() => alert("Somos un equipo dedicado a la divulgación científica.")}>
+            Quiénes somos
+          </button>
+          <button className="boton-naranja" onClick={() => alert("Los datos se obtienen de varias fuentes y se combinan.")}>
+            Precisión de los datos
+          </button>
         </nav>
       </header>
 
-      <p>Hacé clic en el mapa para ver el clima, sol/luna y contaminación lumínica del lugar.</p>
+      <p className="instrucciones">Hacé clic en el mapa para ver el clima, sol/luna y contaminación lumínica del lugar.</p>
 
       <MapContainer center={[-34.6037, -58.3816]} zoom={5} className="leaflet-container">
         <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
         <LocationMarker onSelect={handleMapClick} />
       </MapContainer>
 
-      {loading && <p>Cargando datos...</p>}
-      {errorMsg && <p style={{ color: "red" }}>{errorMsg}</p>}
+      {loading && <p className="estado-carga">Cargando datos...</p>}
+      {errorMsg && <p className="error-clima">{errorMsg}</p>}
       {coords && (
-        <p>
+        <p className="coordenadas">
           Coordenadas: Lat {coords.lat.toFixed(5)}, Lng {coords.lng.toFixed(5)}
         </p>
       )}

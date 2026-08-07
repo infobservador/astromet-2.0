@@ -69,3 +69,11 @@
 - `pages/api/clima.js` y `pages/api/comentario.js` siguen sin conectarse al frontend
   (usan clima de un solo punto en vez del pronóstico); no hacían falta para lo que
   pediste, pero quedan disponibles si más adelante querés usarlos.
+
+# Tercera pasada: diseño e identidad de marca
+
+- Paleta azul (cielo nocturno) + botones naranja, definida en `styles/globals.css`
+  usando variables CSS (`--azul-noche`, `--naranja`, etc.) para que sea fácil de
+  ajustar más adelante si querés retocar algún tono.
+- Logo del Instituto Latinoamericano de Astroturismo agregado en `public/logo.png`.
+- Email de contacto actualizado a `info@astroturismo.com.ar`.

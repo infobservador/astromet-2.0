@@ -6,18 +6,18 @@ function formatHora(iso) {
 }
 
 const colorPorNivel = {
-  Excelente: "#1a7f37",
-  Buena: "#9a6700",
-  Regular: "#cf222e",
+  Excelente: "#8ee6a0",
+  Buena: "#ffd27a",
+  Regular: "#ffb4a2",
 };
 
 export default function Results({ data, advice }) {
   const { weather, solLuna, bortle } = data;
 
   return (
-    <div style={{ maxWidth: 480, margin: "20px auto", textAlign: "left" }}>
+    <div className="panel-resultados">
       {advice && (
-        <p style={{ fontWeight: "bold", color: colorPorNivel[advice.nivel] || "inherit" }}>
+        <p className="consejo" style={{ color: colorPorNivel[advice.nivel] || "inherit" }}>
           {advice.nivel}: {advice.texto}
         </p>
       )}
