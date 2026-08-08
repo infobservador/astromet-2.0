@@ -185,3 +185,29 @@
 - Para activarlo: agregar `LIGHTPOLLUTION_KEY` en Vercel (Settings → Environment
   Variables) con la clave que te dieron, y hacer Redeploy. No hace falta cambiar nada
   más: el resto del código ya está preparado para usarla automáticamente.
+
+# Novena pasada: confirmado funcionando + limpieza
+
+- La causa del problema anterior era simplemente que `LIGHTPOLLUTION_KEY` nunca se había
+  guardado en Vercel (solo estaba `OPENWEATHER_KEY`). Una vez agregada, el dato satelital
+  real empezó a funcionar (probado: Bortle 1, SQM 21.86 mag/arcsec² en un punto de
+  prueba).
+- Se sacó el mensaje de diagnóstico temporal de `pages/api/bortle.js` (ya cumplió su
+  función).
+
+# Décima pasada: pronóstico combinado (OpenWeather + Open-Meteo)
+
+- `pages/api/weather.js` ahora consulta DOS fuentes de clima en paralelo:
+  - **OpenWeather** (como antes, bloques de 3 horas, hasta 5 días, necesita clave).
+  - **Open-Meteo** (nueva, datos por hora, hasta 16 días, **sin necesidad de clave ni
+    registro** — no hay que pedirle nada a nadie).
+- Cuando ambas responden para la fecha/hora elegida, se promedian entre sí (temperatura,
+  nubosidad, humedad, viento) para un resultado más robusto que depender de una sola
+  fuente.
+- Si solo una tiene datos para esa fecha (por ejemplo, una fecha a más de 5 días, donde
+  OpenWeather ya no llega pero Open-Meteo sí), se usa esa sola, sin romper la app.
+- La app ahora muestra qué fuente(s) se usaron en cada consulta (debajo de "Clima").
+- Como consecuencia, el límite de fecha seleccionable en el formulario subió de 5 a 15
+  días hacia adelante.
+- El promedio ya no se calcula en el navegador (`pages/index.js`); lo devuelve directo
+  la API, ya combinado.

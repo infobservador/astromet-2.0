@@ -27,7 +27,7 @@ const INFO_BOTONES_FOOTER = {
   precision: {
     titulo: "Fuentes y precisión técnica",
     texto:
-      "Clima: se utiliza el pronóstico de OpenWeather, con bloques de 3 horas y un horizonte máximo de 5 días hacia adelante (más allá de eso no hay datos disponibles, y la aplicación lo indica). " +
+      "Clima: se combinan dos pronósticos independientes para un resultado más robusto — OpenWeather (bloques de 3 horas, hasta 5 días hacia adelante) y Open-Meteo (datos por hora, hasta 16 días hacia adelante, sin necesidad de clave). Cuando ambos están disponibles para la fecha elegida, se promedian entre sí; si solo uno tiene datos para esa fecha (por ejemplo, más allá de los 5 días de OpenWeather), se usa el que esté disponible. La aplicación siempre indica qué fuente(s) se usaron. " +
       "Sol y luna: los horarios de salida, puesta, inicio y fin de la noche astronómica, y la posición/fase lunar, se calculan matemáticamente con la librería SunCalc, que tiene alta precisión astronómica y no depende de ningún servicio externo. " +
       "Contaminación lumínica (escala de Bortle): cuando está disponible, se utiliza el World Atlas 2015 (Falchi et al.), un estudio científico basado en datos satelitales reales de los sensores VIIRS de NASA/NOAA, consultado a través del servicio lightpollutionmap.info. " +
       "Cuando ese servicio no está configurado o no responde, se utiliza en su lugar una ESTIMACIÓN aproximada según el tipo de lugar (ciudad, pueblo, zona rural o área protegida), que no proviene de mediciones satelitales y debe tomarse solo como una referencia general. " +
@@ -57,13 +57,13 @@ function construirRangoFechaHora(fecha, desdeHora, hastaHora) {
   }
 
   const ahora = new Date();
-  const limiteMax = new Date(ahora.getTime() + 5 * 24 * 60 * 60 * 1000);
+  const limiteMax = new Date(ahora.getTime() + 15 * 24 * 60 * 60 * 1000);
 
   if (hasta < new Date(ahora.getTime() - 3 * 60 * 60 * 1000)) {
     return { error: "La fecha/hora elegida ya pasó." };
   }
   if (desde > limiteMax) {
-    return { error: "Solo se puede pronosticar el clima hasta 5 días hacia adelante." };
+    return { error: "Solo se puede pronosticar el clima hasta 15 días hacia adelante." };
   }
 
   return { desde, hasta };
@@ -165,21 +165,18 @@ export default function Home() {
     ]);
 
     if (weatherResult.status === "fulfilled") {
-      const bloques = weatherResult.value;
-      const promedio = bloques.reduce(
-        (acc, item) => ({
-          temp: acc.temp + item.temperatura / bloques.length,
-          clouds: acc.clouds + item.nubosidad / bloques.length,
-          humidity: acc.humidity + item.humedad / bloques.length,
-          wind: acc.wind + item.viento / bloques.length,
-        }),
-        { temp: 0, clouds: 0, humidity: 0, wind: 0 }
-      );
+      const { bloques, promedio, fuentes } = weatherResult.value;
 
       const solLuna = solYLunaResult.status === "fulfilled" ? solYLunaResult.value : null;
       const bortleInfo = bortleResult.status === "fulfilled" ? bortleResult.value : { bortle: null, comentario: null };
 
-      setData({ weather: promedio, solLuna, bortle: bortleInfo.bortle, bortleComentario: bortleInfo.comentario });
+      setData({
+        weather: promedio,
+        weatherFuentes: fuentes,
+        solLuna,
+        bortle: bortleInfo.bortle,
+        bortleComentario: bortleInfo.comentario,
+      });
       setAdvice(generarConsejo(promedio, bortleInfo.bortle, solLuna?.iluminacionLunarPorc));
       setDescripcionNoche(generarDescripcionNoche(bloques, solLuna, bortleInfo, rango.desde));
     } else {

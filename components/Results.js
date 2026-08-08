@@ -186,6 +186,9 @@ export default function Results({ data, advice, descripcionNoche }) {
       )}
 
       <h3>Clima</h3>
+      {data.weatherFuentes && data.weatherFuentes.length > 0 && (
+        <p className="fuentes-clima">Fuentes: {data.weatherFuentes.join(" + ")}</p>
+      )}
       <div className="tarjetas-grid">
         <Tarjeta icono={<IconoTermometro />} etiqueta="Temperatura" valor={`${weather.temp.toFixed(1)} °C`} />
         <Tarjeta icono={<IconoNube />} etiqueta="Nubosidad" valor={`${weather.clouds.toFixed(0)}%`} />

@@ -340,3 +340,9 @@ body {
     grid-template-columns: 1fr;
   }
 }
+
+.fuentes-clima {
+  color: var(--texto-tenue);
+  font-size: 0.75rem;
+  margin: -4px 0 8px;
+}
