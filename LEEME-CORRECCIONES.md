@@ -103,3 +103,42 @@
   en `lib/astro.js` y nunca estuvieron conectadas al frontend.
 - Botones de arriba ahora despliegan un panel con información real (fuentes de datos y
   qué tan precisos son), en vez de un `alert()` genérico.
+
+# Quinta pasada: Bortle con datos satelitales reales (opcional)
+
+- Encontré un servicio real y gratuito (`lightpollutionmap.info`) que usa el **World
+  Atlas 2015** (Falchi et al.), basado en datos satelitales NASA/NOAA VIIRS reales, para
+  consultar el brillo artificial del cielo por coordenadas.
+- `pages/api/bortle.js` ahora intenta ese servicio PRIMERO (si configurás
+  `LIGHTPOLLUTION_KEY` en tus variables de entorno). Si no está configurada, o el
+  servicio falla por cualquier motivo, cae automáticamente en la estimación por tipo de
+  lugar (ciudad/pueblo/zona rural/área protegida) como respaldo, sin romper la app.
+- La respuesta siempre indica de qué fuente salió el dato ("Estimado con datos
+  satelitales reales..." vs "...estimado por tipo de lugar, sin datos satelitales").
+- **Cómo conseguir la clave** (gratis, no es inmediato): hay que escribirle por mail a
+  Jurij Stare (el mantenedor del sitio) a starej@t-2.net, pidiendo acceso al endpoint
+  `QueryRaster` (capa `wa_2015`) para tu app. Te suele dar 500 consultas gratis por día.
+  No hace falta que hagas esto ahora — la app funciona igual sin la clave, solo que con
+  la estimación aproximada en vez del dato satelital.
+- La conversión de brillo artificial a Bortle usa la fórmula publicada por el propio
+  sitio (brillo → SQM → Bortle), implementada en `lib/astro.js`
+  (`brilloArtificialABortle`).
+
+# Sexta pasada: tarjetas visuales + descripción profesional para astroturismo
+
+- **Resultados de sol/luna y clima ahora se muestran como tarjetas** con íconos SVG
+  propios (sol/luna con flecha arriba o abajo según sale o se pone, luna con fase
+  parcialmente rellena según % de iluminación, termómetro, nube, gota, viento, ojo para
+  Bortle). Todo dibujado en `components/Results.js`, sin librerías externas de íconos.
+- **Nueva "Descripción de la noche"** (`lib/descripcionNoche.js`): en vez de un consejo
+  genérico, ahora analiza los bloques de pronóstico HORA POR HORA (no solo el promedio)
+  para detectar tramos con mucha nubosidad y decirlo explícitamente (ej. "nubosidad
+  significativa entre las 21:00 y las 00:00 hs"). Después da una recomendación de
+  actividad según el panorama:
+  - Muy nublado → sugiere reforzar con realidad aumentada, charlas de mitología/
+    cosmovisiones ancestrales, u observación solar/planetaria en otro horario.
+  - Bortle alto (mucha contaminación lumínica) → sugiere enfocarse en Luna, planetas y
+    estrellas dobles en vez de cielo profundo.
+  - Luna muy iluminada → sugiere observación lunar/planetaria de detalle.
+  - Buenas condiciones → sugiere programa completo de cielo profundo + astrofotografía.
+  El "Excelente/Buena/Regular" de antes se mantiene como resumen rápido arriba de todo.

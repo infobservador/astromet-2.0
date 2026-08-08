@@ -252,3 +252,59 @@ body {
   font-size: 0.85rem;
   margin-top: -4px;
 }
+
+/* --- Tarjetas de resultados (sol/luna, clima, bortle) --- */
+.tarjetas-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.tarjeta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background-color: #0e1f3f;
+  border: 1px solid rgba(255, 122, 41, 0.25);
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+
+.tarjeta-icono {
+  color: var(--naranja);
+  flex-shrink: 0;
+}
+
+.tarjeta-valor {
+  font-weight: bold;
+  font-size: 1.05rem;
+  color: var(--texto-claro);
+  line-height: 1.2;
+}
+
+.tarjeta-etiqueta {
+  font-size: 0.72rem;
+  color: var(--texto-tenue);
+  line-height: 1.2;
+}
+
+/* --- Descripción de la noche (texto profesional para astroturismo) --- */
+.descripcion-noche {
+  background-color: rgba(255, 122, 41, 0.08);
+  border-left: 3px solid var(--naranja);
+  border-radius: 6px;
+  padding: 12px 16px;
+  margin: 16px 0;
+}
+
+.descripcion-noche h3 {
+  margin-top: 0 !important;
+  border-bottom: none !important;
+}
+
+.descripcion-noche p {
+  font-size: 0.9rem;
+  line-height: 1.5;
+  margin: 8px 0;
+}

@@ -1,6 +1,7 @@
 import dynamic from "next/dynamic";
 import { useState } from "react";
 import Results from "../components/Results";
+import { generarDescripcionNoche } from "../lib/descripcionNoche";
 
 const MapContainer = dynamic(() => import("react-leaflet").then((m) => m.MapContainer), { ssr: false });
 const TileLayer = dynamic(() => import("react-leaflet").then((m) => m.TileLayer), { ssr: false });
@@ -22,8 +23,9 @@ const INFO_BOTONES = {
     texto:
       "Clima: pronóstico de OpenWeather (bloques de 3 horas, hasta 5 días hacia adelante; más allá de eso no hay datos disponibles). " +
       "Sol y luna: calculado matemáticamente con la librería SunCalc (alta precisión). " +
-      "Contaminación lumínica (escala de Bortle): ESTIMADA según si el punto está en una ciudad, pueblo, zona rural o área protegida " +
-      "(datos de OpenStreetMap), no proviene de mediciones satelitales reales. Es una aproximación, no un valor certificado. " +
+      "Contaminación lumínica (escala de Bortle): si está configurada, se usa el World Atlas 2015 (datos satelitales reales NASA/NOAA VIIRS) vía lightpollutionmap.info. " +
+      "Si no, se usa una ESTIMACIÓN aproximada según el tipo de lugar (ciudad/pueblo/zona rural/área protegida), que no proviene de mediciones satelitales. " +
+      "El resultado siempre indica de cuál de las dos fuentes proviene. " +
       "Nombre del lugar: geocodificación de OpenStreetMap/Nominatim, puede no ser exacto en zonas muy despobladas.",
   },
 };
@@ -114,6 +116,7 @@ export default function Home() {
   const [lugarNombre, setLugarNombre] = useState(null);
   const [data, setData] = useState(null);
   const [advice, setAdvice] = useState(null);
+  const [descripcionNoche, setDescripcionNoche] = useState(null);
   const [errorMsg, setErrorMsg] = useState("");
   const [loading, setLoading] = useState(false);
   const [panelInfo, setPanelInfo] = useState(null);
@@ -145,6 +148,7 @@ export default function Home() {
     setLoading(true);
     setData(null);
     setAdvice(null);
+    setDescripcionNoche(null);
 
     const [weatherResult, solYLunaResult, bortleResult, lugarResult] = await Promise.allSettled([
       fetchJSON(`/api/weather?lat=${lat}&lon=${lng}&desde=${rango.desde.toISOString()}&hasta=${rango.hasta.toISOString()}`),
@@ -170,6 +174,7 @@ export default function Home() {
 
       setData({ weather: promedio, solLuna, bortle: bortleInfo.bortle, bortleComentario: bortleInfo.comentario });
       setAdvice(generarConsejo(promedio, bortleInfo.bortle, solLuna?.iluminacionLunarPorc));
+      setDescripcionNoche(generarDescripcionNoche(bloques, solLuna, bortleInfo));
     } else {
       setErrorMsg(weatherResult.reason?.message || "No se pudo obtener el clima para este punto y horario.");
     }
@@ -320,7 +325,7 @@ export default function Home() {
         </p>
       )}
 
-      {data && <Results data={data} advice={advice} />}
+      {data && <Results data={data} advice={advice} descripcionNoche={descripcionNoche} />}
     </div>
   );
 }
