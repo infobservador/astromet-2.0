@@ -237,3 +237,54 @@
   a la API directamente sin pasar por el formulario.
 - **Búsqueda por texto** (`pages/api/buscar.js`): además del mínimo de 2 caracteres, ahora
   también rechaza textos de más de 200 caracteres.
+
+# Duodécima pasada: comparador de noches, PDF, favoritos, y modo offline básico
+
+De las 5 mejoras sugeridas, se implementaron 4 completas. La quinta (alertas
+automáticas por mail) necesita que te registres en un servicio de envío de emails
+(similar a lo que hicimos con OpenWeather o lightpollutionmap.info) antes de poder
+conectarla — no la armé a medias para no dejar algo que parezca funcionar sin funcionar
+de verdad. Cuando quieras armarla, avisame y vemos qué servicio conviene (Resend es
+buena opción, con alta gratuita instantánea, sin trámite de aprobación manual).
+
+## 1. Comparador de varias noches
+- Nueva sección al final de la página: elegís cuántas noches comparar (1 a 15) y usa el
+  mismo horario (Desde/Hasta) ya configurado arriba, para el lugar seleccionado.
+- Consulta clima + sol/luna de cada noche (reutilizando el mismo Bortle, ya que no
+  cambia noche a noche) y las ordena de mejor a peor según el mismo puntaje que ya usa
+  `generarConsejo` (ahora expone ese puntaje numérico, antes solo devolvía el texto).
+- Cada fila tiene un botón "Ver detalle" que carga el resultado completo de esa noche
+  puntual (clima, sol/luna, descripción profesional, etc.).
+- Se corrigió un bug propio durante el desarrollo: al hacer clic en "Ver detalle",
+  `calcularParaUbicacion` usaba la fecha vieja por un problema de actualización
+  asincrónica de estado en React. Ahora acepta la fecha como parámetro explícito en
+  vez de depender del estado.
+
+## 2. Reporte en PDF
+- Botón "Descargar reporte en PDF" arriba de los resultados.
+- Usa la librería `jspdf` (nueva dependencia), cargada de forma dinámica solo del lado
+  del cliente (mismo motivo que con Leaflet: evitar problemas de renderizado en el
+  servidor).
+- El PDF incluye: lugar, fecha/horario, evaluación general, descripción de la noche
+  completa, clima, sol/luna, y contaminación lumínica — todo lo que se ve en pantalla,
+  en un documento prolijo para mandarle a un cliente antes de la salida.
+
+## 3. Favoritos
+- Botón "☆ Guardar" junto a la ubicación seleccionada.
+- Se guardan en el propio navegador (localStorage) — no hay cuenta de usuario ni base
+  de datos del lado del servidor, así que los favoritos son por dispositivo/navegador,
+  no se sincronizan entre celular y computadora. Si más adelante querés que sí se
+  sincronicen entre dispositivos, hace falta agregar una base de datos real (otro paso
+  de infraestructura, avisame si te interesa).
+- Aparecen como chips debajo del buscador; un clic carga esa ubicación al instante.
+
+## 4. Modo offline básico (PWA)
+- Se agregó `public/manifest.json` y `public/sw.js` (service worker), registrado en
+  `pages/_app.js`.
+- Cachea el "shell" de la aplicación (HTML, CSS, JS, logo) para que la interfaz cargue
+  aunque no haya señal, y se pueda instalar como app en el celular ("Agregar a
+  pantalla de inicio").
+- IMPORTANTE: esto NO permite calcular clima/sol-luna/Bortle sin conexión — esos datos
+  siempre requieren señal, ya que vienen de servicios externos en tiempo real. Lo que
+  sí permite es que la app no quede en blanco/rota si se corta la señal en el lugar,
+  y que se pueda abrir más rápido en visitas siguientes.

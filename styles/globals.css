@@ -346,3 +346,143 @@ body {
   font-size: 0.75rem;
   margin: -4px 0 8px;
 }
+
+/* --- Favoritos --- */
+.favoritos {
+  max-width: 480px;
+  margin: 0 auto 16px;
+  text-align: left;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+}
+
+.favoritos-etiqueta {
+  color: var(--texto-tenue);
+  font-size: 0.8rem;
+  margin-right: 4px;
+}
+
+.favorito-chip {
+  display: inline-flex;
+  align-items: center;
+  background-color: var(--azul-claro);
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.favorito-chip button:first-child {
+  background: none;
+  border: none;
+  color: var(--texto-claro);
+  padding: 5px 10px;
+  font-size: 0.78rem;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.favorito-quitar {
+  background: none;
+  border: none;
+  color: var(--texto-tenue);
+  padding: 5px 8px 5px 0;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.boton-favorito {
+  margin-left: 10px;
+  background: none;
+  border: 1px solid var(--naranja);
+  color: var(--naranja);
+  border-radius: 6px;
+  padding: 2px 8px;
+  font-size: 0.75rem;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+/* --- Acciones sobre el resultado (PDF) --- */
+.acciones-resultado {
+  margin: 12px 0;
+}
+
+/* --- Comparador de varias noches --- */
+.comparador {
+  max-width: 640px;
+  margin: 40px auto 0;
+  text-align: left;
+}
+
+.comparador-controles {
+  display: flex;
+  gap: 12px;
+  align-items: flex-end;
+  margin-bottom: 16px;
+}
+
+.comparador-controles label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: var(--texto-tenue);
+  font-size: 0.85rem;
+}
+
+.comparador-controles input {
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--azul-claro);
+  background-color: #0e1f3f;
+  color: var(--texto-claro);
+  font-family: inherit;
+  width: 90px;
+}
+
+.comparador-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.comparador-fila {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background-color: #0e1f3f;
+  border-radius: 8px;
+  padding: 10px 14px;
+}
+
+.comparador-puesto {
+  color: var(--naranja);
+  font-weight: bold;
+  width: 28px;
+}
+
+.comparador-info {
+  flex: 1;
+}
+
+.comparador-fecha {
+  font-weight: bold;
+  text-transform: capitalize;
+}
+
+.comparador-metricas {
+  font-size: 0.78rem;
+  color: var(--texto-tenue);
+}
+
+.comparador-nivel {
+  font-weight: bold;
+  font-size: 0.85rem;
+  width: 80px;
+  text-align: center;
+}
+
+.comparador-boton {
+  padding: 6px 12px;
+  font-size: 0.78rem;
+}

@@ -1,7 +1,9 @@
 import dynamic from "next/dynamic";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Results from "../components/Results";
+import Comparador from "../components/Comparador";
 import { generarDescripcionNoche } from "../lib/descripcionNoche";
+import { generarPdfReporte } from "../lib/generarPdf";
 
 const MapContainer = dynamic(() => import("react-leaflet").then((m) => m.MapContainer), { ssr: false });
 const TileLayer = dynamic(() => import("react-leaflet").then((m) => m.TileLayer), { ssr: false });
@@ -123,16 +125,18 @@ function generarConsejo(clima, bortle, iluminacionLunarPorc) {
     else puntaje += 1;
   }
 
-  if (puntaje >= 5) return { nivel: "Excelente", texto: "Excelente noche para observación astronómica." };
+  if (puntaje >= 5) return { nivel: "Excelente", texto: "Excelente noche para observación astronómica.", puntaje };
   if (puntaje >= 3) {
     return {
       nivel: "Buena",
       texto: razones.length ? `Buena noche, con algunas limitaciones: ${razones.join(", ")}.` : "Buena noche para observar.",
+      puntaje,
     };
   }
   return {
     nivel: "Regular",
     texto: razones.length ? `Condiciones difíciles: ${razones.join(", ")}.` : "Condiciones poco favorables esta noche.",
+    puntaje,
   };
 }
 
@@ -165,6 +169,50 @@ export default function Home() {
   const [buscando, setBuscando] = useState(false);
   const [resultadosBusqueda, setResultadosBusqueda] = useState([]);
 
+  const [favoritos, setFavoritos] = useState([]);
+  const [comparando, setComparando] = useState(false);
+  const [cantidadNoches, setCantidadNoches] = useState("7");
+  const [resultadosComparacion, setResultadosComparacion] = useState(null);
+
+  // Carga los favoritos guardados en este navegador (localStorage), si hay alguno.
+  useEffect(() => {
+    try {
+      const guardados = window.localStorage.getItem("astroturismo_favoritos");
+      if (guardados) setFavoritos(JSON.parse(guardados));
+    } catch {
+      // Si localStorage no está disponible o el dato es inválido, seguimos sin favoritos.
+    }
+  }, []);
+
+  function guardarFavoritos(lista) {
+    setFavoritos(lista);
+    try {
+      window.localStorage.setItem("astroturismo_favoritos", JSON.stringify(lista));
+    } catch {
+      // Si no se puede guardar (modo privado, storage lleno, etc.), no rompemos la app.
+    }
+  }
+
+  function agregarFavorito() {
+    if (!coords) return;
+    const nombre = lugarNombre || `${coords.lat.toFixed(4)}, ${coords.lng.toFixed(4)}`;
+    const yaExiste = favoritos.some((f) => Math.abs(f.lat - coords.lat) < 0.0001 && Math.abs(f.lng - coords.lng) < 0.0001);
+    if (yaExiste) return;
+    guardarFavoritos([...favoritos, { nombre, lat: coords.lat, lng: coords.lng }]);
+  }
+
+  function eliminarFavorito(i) {
+    guardarFavoritos(favoritos.filter((_, idx) => idx !== i));
+  }
+
+  function usarFavorito(fav) {
+    const punto = { lat: fav.lat, lng: fav.lng };
+    setCoords(punto);
+    setCentrarEn({ lat: fav.lat, lng: fav.lng, ts: Date.now() });
+    setLugarNombre(fav.nombre);
+    calcularParaUbicacion(fav.lat, fav.lng);
+  }
+
   async function fetchJSON(url) {
     const res = await fetch(url);
     const json = await res.json();
@@ -172,10 +220,11 @@ export default function Home() {
     return json;
   }
 
-  async function calcularParaUbicacion(lat, lng) {
+  async function calcularParaUbicacion(lat, lng, fechaOverride) {
     setErrorMsg("");
 
-    const rango = construirRangoFechaHora(fecha, desdeHora, hastaHora);
+    const fechaAUsar = fechaOverride || fecha;
+    const rango = construirRangoFechaHora(fechaAUsar, desdeHora, hastaHora);
     if (rango.error) {
       setErrorMsg(rango.error);
       return;
@@ -227,6 +276,69 @@ export default function Home() {
       return;
     }
     calcularParaUbicacion(coords.lat, coords.lng);
+  }
+
+  async function handleComparar() {
+    if (!coords) {
+      setErrorMsg("Primero elegí un lugar en el mapa o con el buscador.");
+      return;
+    }
+
+    const cantidad = parseInt(cantidadNoches, 10);
+    if (isNaN(cantidad) || cantidad < 1 || cantidad > 15) {
+      setErrorMsg("La cantidad de noches a comparar debe ser un número entre 1 y 15.");
+      return;
+    }
+
+    setErrorMsg("");
+    setComparando(true);
+    setResultadosComparacion(null);
+
+    let bortleInfo = { bortle: null, comentario: null };
+    try {
+      bortleInfo = await fetchJSON(`/api/bortle?lat=${coords.lat}&lon=${coords.lng}`);
+    } catch {
+      // Si falla, seguimos sin dato de Bortle en la comparación (no es crítico).
+    }
+
+    const noches = [];
+    for (let i = 0; i < cantidad; i++) {
+      const d = new Date();
+      d.setDate(d.getDate() + i);
+      const fechaISO = d.toISOString().slice(0, 10);
+      const rango = construirRangoFechaHora(fechaISO, desdeHora, hastaHora);
+      if (rango.error) continue; // ej: el primer día ya pasó de horario, se salta
+
+      try {
+        const [weatherRes, solLunaRes] = await Promise.all([
+          fetchJSON(`/api/weather?lat=${coords.lat}&lon=${coords.lng}&desde=${rango.desde.toISOString()}&hasta=${rango.hasta.toISOString()}`),
+          fetchJSON(`/api/solyluna?lat=${coords.lat}&lon=${coords.lng}&fecha=${rango.desde.toISOString()}`),
+        ]);
+        const consejo = generarConsejo(weatherRes.promedio, bortleInfo.bortle, solLunaRes?.iluminacionLunarPorc);
+        noches.push({ fecha: fechaISO, promedio: weatherRes.promedio, solLuna: solLunaRes, consejo });
+      } catch {
+        // Si una noche puntual falla (ej. fuera del rango de pronóstico), se salta esa sola.
+      }
+    }
+
+    noches.sort((a, b) => b.consejo.puntaje - a.consejo.puntaje);
+    setResultadosComparacion(noches);
+    setComparando(false);
+
+    if (noches.length === 0) {
+      setErrorMsg("No se pudo calcular ninguna noche dentro del rango de pronóstico disponible.");
+    }
+  }
+
+  function elegirFechaDesdeComparador(fechaISO) {
+    setFecha(fechaISO);
+    setResultadosComparacion(null);
+    calcularParaUbicacion(coords.lat, coords.lng, fechaISO);
+  }
+
+  async function handleDescargarPdf() {
+    if (!data) return;
+    await generarPdfReporte({ data, advice, descripcionNoche, lugarNombre, coords, fecha, desdeHora, hastaHora });
   }
 
   async function handleBuscar(e) {
@@ -312,6 +424,22 @@ export default function Home() {
         )}
       </form>
 
+      {favoritos.length > 0 && (
+        <div className="favoritos" onClick={(e) => e.stopPropagation()}>
+          <span className="favoritos-etiqueta">Favoritos:</span>
+          {favoritos.map((f, i) => (
+            <span key={i} className="favorito-chip">
+              <button type="button" onClick={() => usarFavorito(f)}>
+                {f.nombre}
+              </button>
+              <button type="button" className="favorito-quitar" onClick={() => eliminarFavorito(i)} aria-label="Quitar de favoritos">
+                ×
+              </button>
+            </span>
+          ))}
+        </div>
+      )}
+
       <div className="fecha-hora">
         <label>
           Fecha:
@@ -365,10 +493,47 @@ export default function Home() {
         <p className="coordenadas">
           Ubicación seleccionada: {lugarNombre ? <strong>{lugarNombre}</strong> : "nombre no disponible"} (
           {coords.lat.toFixed(4)}, {coords.lng.toFixed(4)})
+          <button className="boton-favorito" onClick={agregarFavorito} title="Guardar como favorito">
+            ☆ Guardar
+          </button>
         </p>
       )}
 
+      {data && (
+        <div className="acciones-resultado">
+          <button className="boton-naranja" onClick={handleDescargarPdf}>
+            Descargar reporte en PDF
+          </button>
+        </div>
+      )}
+
       {data && <Results data={data} advice={advice} descripcionNoche={descripcionNoche} />}
+
+      <div className="comparador" onClick={(e) => e.stopPropagation()}>
+        <h3>Comparar varias noches</h3>
+        <p className="instrucciones">
+          Compara el mismo horario ({desdeHora}hs a {hastaHora}hs) a lo largo de varias noches, para el lugar seleccionado, y las
+          ordena de mejor a peor.
+        </p>
+        <div className="comparador-controles">
+          <label>
+            Cantidad de noches:
+            <input
+              type="number"
+              min="1"
+              max="15"
+              step="1"
+              inputMode="numeric"
+              value={cantidadNoches}
+              onChange={(e) => setCantidadNoches(e.target.value)}
+            />
+          </label>
+          <button className="boton-naranja" onClick={handleComparar} disabled={!coords || comparando}>
+            {comparando ? "Comparando..." : "Comparar"}
+          </button>
+        </div>
+        {resultadosComparacion && <Comparador resultados={resultadosComparacion} onElegirFecha={elegirFechaDesdeComparador} />}
+      </div>
 
       <footer className="pie-pagina">
         <nav className="nav-botones">

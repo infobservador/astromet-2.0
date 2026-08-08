@@ -13,6 +13,7 @@
     "react-dom": "18.2.0",
     "leaflet": "^1.9.4",
     "react-leaflet": "^4.2.1",
-    "suncalc": "latest"
+    "suncalc": "latest",
+    "jspdf": "^2.5.1"
   }
 }
