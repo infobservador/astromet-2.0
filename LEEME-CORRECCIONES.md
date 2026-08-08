@@ -77,3 +77,29 @@
   ajustar más adelante si querés retocar algún tono.
 - Logo del Instituto Latinoamericano de Astroturismo agregado en `public/logo.png`.
 - Email de contacto actualizado a `info@astroturismo.com.ar`.
+
+# Cuarta pasada: buscador, marcador, fecha/hora, y Bortle estimado
+
+- **Marcador en el mapa**: al hacer clic (o buscar) ahora se ve un pin en el punto
+  elegido (`components/LocationMarker.js`), con ícono cargado desde CDN para evitar
+  el bug clásico de Next.js con los íconos de Leaflet.
+- **Nombre del lugar**: nueva ruta `pages/api/lugar.js`, usa geocodificación inversa
+  de OpenStreetMap/Nominatim (gratis, sin API key). Se muestra junto a las coordenadas.
+- **Buscador por texto**: nueva ruta `pages/api/buscar.js` (geocodificación directa).
+  Escribís un nombre de lugar, elegís de la lista de resultados, y el mapa se centra ahí.
+- **Fecha + rango horario**: podés elegir una fecha y un rango tipo "19hs a 3hs del otro
+  día" (si "hasta" es menor que "desde", se asume que cruza la medianoche). El pronóstico
+  del clima ahora promedia los bloques de OpenWeather dentro de ese rango exacto, en vez
+  de usar siempre "ahora + 6 horas". Sol/luna también se recalculan para la fecha elegida.
+- **Validación de fecha/hora** (`construirRangoFechaHora` en `pages/index.js`): rechaza
+  fechas con formato inválido, horas fuera de 0-23, fechas ya pasadas, y fechas a más de
+  5 días (límite del pronóstico gratuito de OpenWeather), mostrando un mensaje claro en
+  vez de romper la página.
+- **Bortle con comentario**: como no hay datos satelitales reales conectados, ahora se
+  estima el valor de Bortle según el tipo de lugar (ciudad/pueblo/zona rural/área
+  protegida) usando la clasificación que ya devuelve OpenStreetMap, y siempre se muestra
+  un comentario explicando que es una aproximación. `pages/api/clima.js` y
+  `pages/api/comentario.js` se borraron porque dependían de funciones que ya no existen
+  en `lib/astro.js` y nunca estuvieron conectadas al frontend.
+- Botones de arriba ahora despliegan un panel con información real (fuentes de datos y
+  qué tan precisos son), en vez de un `alert()` genérico.

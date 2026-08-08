@@ -1,5 +1,5 @@
 export default async function handler(req, res) {
-  const { lat, lon } = req.query;
+  const { lat, lon, desde, hasta } = req.query;
 
   if (!lat || !lon) {
     return res.status(400).json({ error: "Faltan parámetros lat y lon" });
@@ -25,8 +25,29 @@ export default async function handler(req, res) {
       return res.status(502).json({ error: "Respuesta inesperada de OpenWeather" });
     }
 
-    // Tomamos solo los próximos 5 pronósticos (cada uno cubre 3 horas)
-    const forecast = data.list.slice(0, 5).map((item) => ({
+    let bloques = data.list;
+
+    if (desde && hasta) {
+      const desdeMs = Date.parse(desde);
+      const hastaMs = Date.parse(hasta);
+
+      if (isNaN(desdeMs) || isNaN(hastaMs) || hastaMs <= desdeMs) {
+        return res.status(400).json({ error: "Rango de fecha/hora inválido." });
+      }
+
+      bloques = data.list.filter((item) => item.dt * 1000 >= desdeMs && item.dt * 1000 <= hastaMs);
+
+      if (bloques.length === 0) {
+        return res.status(422).json({
+          error:
+            "No hay pronóstico disponible para esa fecha/hora. OpenWeather solo pronostica hasta 5 días hacia adelante.",
+        });
+      }
+    } else {
+      bloques = data.list.slice(0, 2);
+    }
+
+    const forecast = bloques.map((item) => ({
       hora: item.dt_txt,
       temperatura: item.main.temp,
       nubosidad: item.clouds.all,

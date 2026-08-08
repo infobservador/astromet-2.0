@@ -52,7 +52,8 @@ export default function Results({ data, advice }) {
       )}
 
       <h3>Contaminación lumínica</h3>
-      <p>Escala de Bortle: {bortle !== null && bortle !== undefined ? bortle : "No disponible todavía"}</p>
+      <p>Escala de Bortle: {bortle !== null && bortle !== undefined ? bortle : "No disponible"}</p>
+      {data.bortleComentario && <p className="bortle-comentario">{data.bortleComentario}</p>}
     </div>
   );
 }

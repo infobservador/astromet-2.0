@@ -143,3 +143,112 @@ body {
   border-radius: 8px;
   background-color: rgba(0, 0, 0, 0.2);
 }
+
+/* --- Panel de info de los botones de arriba --- */
+.panel-info {
+  max-width: 640px;
+  margin: 0 auto 20px;
+  background-color: var(--azul-claro);
+  border-radius: 8px;
+  padding: 14px 18px;
+  text-align: left;
+  font-size: 0.9rem;
+  color: var(--texto-claro);
+}
+
+/* --- Buscador --- */
+.buscador {
+  max-width: 480px;
+  margin: 0 auto 20px;
+  text-align: left;
+}
+
+.etiqueta-buscador {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--texto-tenue);
+  font-size: 0.9rem;
+}
+
+.buscador-fila {
+  display: flex;
+  gap: 8px;
+}
+
+.buscador-fila input[type="text"] {
+  flex: 1;
+  padding: 10px 12px;
+  border-radius: 6px;
+  border: 1px solid var(--azul-claro);
+  background-color: #0e1f3f;
+  color: var(--texto-claro);
+  font-family: inherit;
+}
+
+.resultados-busqueda {
+  list-style: none;
+  margin: 8px 0 0;
+  padding: 0;
+  background-color: #0e1f3f;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.resultados-busqueda li button {
+  width: 100%;
+  text-align: left;
+  background: none;
+  border: none;
+  color: var(--texto-claro);
+  padding: 10px 12px;
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.85rem;
+}
+
+.resultados-busqueda li button:hover {
+  background-color: var(--azul-claro);
+}
+
+/* --- Fecha y rango horario --- */
+.fecha-hora {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.fecha-hora label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  color: var(--texto-tenue);
+  font-size: 0.85rem;
+}
+
+.fecha-hora input {
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--azul-claro);
+  background-color: #0e1f3f;
+  color: var(--texto-claro);
+  font-family: inherit;
+  width: 90px;
+}
+
+.fecha-hora input[type="date"] {
+  width: 150px;
+}
+
+.boton-naranja:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.bortle-comentario {
+  color: var(--texto-tenue);
+  font-size: 0.85rem;
+  margin-top: -4px;
+}
