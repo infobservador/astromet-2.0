@@ -142,3 +142,46 @@
   - Luna muy iluminada → sugiere observación lunar/planetaria de detalle.
   - Buenas condiciones → sugiere programa completo de cielo profundo + astrofotografía.
   El "Excelente/Buena/Regular" de antes se mantiene como resumen rápido arriba de todo.
+
+# Séptima pasada: botones reorganizados, layout de tarjetas, y motor de recomendaciones completo
+
+- **Botones**: "Descripción" queda arriba (con texto mucho más extenso). "Quiénes somos"
+  y "Fuentes y precisión técnica" se movieron al pie de página, también con texto más
+  extenso. Cualquier clic fuera de un panel abierto (o fuera del botón que lo abrió) lo
+  cierra automáticamente.
+- **Tarjetas de Sol y Luna en 3 columnas**: izquierda = salida/puesta de sol; centro =
+  comienzo/fin de la noche astronómica; derecha = salida/puesta de la luna, cada columna
+  apilada verticalmente. El ícono de "noche" ahora es solo estrellas (sin luna).
+- **Motor de recomendaciones completo** (`lib/descripcionNoche.js`), con prioridad entre
+  escenarios (se muestra UNO principal, no todos apilados):
+  1. Viento fuerte (>10 m/s) o tormenta → espacio cerrado, astronomía inmersiva, taller de
+     orientación con planisferios + una actividad alternativa variable (video, juegos, RA,
+     RV, o cata de productos regionales — rota entre esas opciones).
+  2. Humedad alta (>80%) → proteger óptica, charlas teóricas, software de planetario +
+     actividad alternativa variable.
+  3. Luna arriba y a menos de 2 hs de ocultarse → estructura en dos tiempos: primero Luna
+     y mitología, después cielo profundo tras la puesta.
+  4. Luna llena/gibosa (iluminación ≥70%) y alta en el cielo (altitud ≥50°) → enfoque
+     lunar/planetario con filtros, folclore lunar, fotografía con celular.
+  5. Nubosidad parcial (30-60%) → estrategia de "ventanas de oportunidad".
+  6. Bortle alto (≥6) → enfoque en Luna/planetas/dobles en vez de cielo profundo.
+  7. Buenas condiciones → programa completo de cielo profundo + astrofotografía.
+- Para el punto 3, ahora se calcula la altitud real de la luna al inicio de la franja
+  horaria elegida, y se busca correctamente el PRÓXIMO evento de salida/puesta de luna
+  revisando también el día siguiente del calendario (esto corrige un caso real donde,
+  si la puesta de luna caía después de medianoche, el cálculo anterior podía no
+  detectarla).
+- `pages/api/weather.js` ahora también informa la condición climática de cada bloque
+  (ej. "Thunderstorm"), usada para detectar riesgo de tormenta.
+
+# Octava pasada: clave real de lightpollutionmap.info
+
+- Confirmada la documentación real del servicio (coincide con la implementación previa):
+  endpoint `https://www.lightpollutionmap.info/QueryRaster/`, parámetros `ql` (capa,
+  usamos `wa_2015`), `qt=point`, `qd` en formato `longitud,latitud`, y `key`.
+- `pages/api/bortle.js` ahora interpreta la respuesta de forma más tolerante (prueba
+  JSON primero, si no interpreta como texto/CSV), ya que la documentación no fija un
+  único formato estricto para consultas de tipo "point".
+- Para activarlo: agregar `LIGHTPOLLUTION_KEY` en Vercel (Settings → Environment
+  Variables) con la clave que te dieron, y hacer Redeploy. No hace falta cambiar nada
+  más: el resto del código ya está preparado para usarla automáticamente.

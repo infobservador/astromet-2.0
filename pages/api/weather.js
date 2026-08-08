@@ -53,6 +53,7 @@ export default async function handler(req, res) {
       nubosidad: item.clouds.all,
       humedad: item.main.humidity,
       viento: item.wind.speed,
+      condicion: item.weather?.[0]?.main || null,
     }));
 
     res.status(200).json(forecast);

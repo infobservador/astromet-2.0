@@ -308,3 +308,35 @@ body {
   line-height: 1.5;
   margin: 8px 0;
 }
+
+/* --- Pie de página (Quiénes somos / Fuentes y precisión) --- */
+.pie-pagina {
+  margin-top: 40px;
+  padding-top: 24px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* --- Columnas de Sol / Noche / Luna --- */
+.columnas-sol-luna {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.columna {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.tarjeta-iluminacion {
+  max-width: 200px;
+  margin: 0 auto 8px;
+}
+
+@media (max-width: 560px) {
+  .columnas-sol-luna {
+    grid-template-columns: 1fr;
+  }
+}

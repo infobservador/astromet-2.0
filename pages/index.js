@@ -7,26 +7,33 @@ const MapContainer = dynamic(() => import("react-leaflet").then((m) => m.MapCont
 const TileLayer = dynamic(() => import("react-leaflet").then((m) => m.TileLayer), { ssr: false });
 const LocationMarker = dynamic(() => import("../components/LocationMarker"), { ssr: false });
 
-const INFO_BOTONES = {
-  descripcion: {
-    titulo: "Descripción",
-    texto:
-      "Astroturismo Inteligente te ayuda a decidir si conviene salir a observar el cielo en un lugar y una franja horaria determinada. " +
-      "Combina pronóstico del clima, horarios de sol y luna, y una estimación de contaminación lumínica en un solo consejo.",
-  },
+const INFO_DESCRIPCION = {
+  titulo: "Descripción",
+  texto:
+    "Astroturismo Inteligente es una herramienta pensada para operadores turísticos, guías y observadores que necesitan decidir, con anticipación, si un lugar y una franja horaria determinados son aptos para una experiencia de observación astronómica. " +
+    "En lugar de mostrar datos sueltos, la aplicación los combina: pronóstico del clima hora por hora (temperatura, nubosidad, humedad y viento), horarios exactos de salida y puesta del sol y la luna, el inicio y fin de la noche astronómica (el momento en que el cielo queda completamente oscuro), la fase e iluminación lunar, y una estimación de la contaminación lumínica del lugar (escala de Bortle). " +
+    "Con toda esa información, genera una descripción de la noche redactada específicamente para programar actividades de astroturismo: identifica tramos horarios problemáticos (por nubosidad, viento, humedad o exceso de luz lunar) y sugiere cómo adaptar la propuesta en cada caso, ya sea reforzando la observación de cielo profundo cuando las condiciones son óptimas, reorientando hacia la Luna y los planetas cuando el cielo no acompaña del todo, o proponiendo actividades alternativas (charlas, realidad aumentada o virtual, catas de productos regionales) cuando las condiciones desaconsejan la observación al aire libre.",
+};
+
+const INFO_BOTONES_FOOTER = {
   quienes: {
     titulo: "Quiénes somos",
-    texto: "Instituto Latinoamericano de Astroturismo. Contacto: info@astroturismo.com.ar",
+    texto:
+      "Somos el Instituto Latinoamericano de Astroturismo, una organización dedicada a promover la observación del cielo nocturno como una actividad turística, educativa y cultural en América Latina. " +
+      "Trabajamos junto a operadores turísticos, guías de montaña, complejos astronómicos, reservas naturales y comunidades locales para desarrollar experiencias de astroturismo responsables, que combinan rigor científico con la riqueza cultural y mitológica de cada región. " +
+      "Esta aplicación es una de nuestras herramientas de apoyo a la planificación: busca ayudar a quienes organizan estas experiencias a tomar mejores decisiones sobre cuándo y cómo llevarlas a cabo, cuidando tanto la calidad de la observación como el equipo utilizado. " +
+      "Para consultas, alianzas institucionales o más información sobre nuestro trabajo, podés escribirnos a info@astroturismo.com.ar.",
   },
   precision: {
     titulo: "Fuentes y precisión técnica",
     texto:
-      "Clima: pronóstico de OpenWeather (bloques de 3 horas, hasta 5 días hacia adelante; más allá de eso no hay datos disponibles). " +
-      "Sol y luna: calculado matemáticamente con la librería SunCalc (alta precisión). " +
-      "Contaminación lumínica (escala de Bortle): si está configurada, se usa el World Atlas 2015 (datos satelitales reales NASA/NOAA VIIRS) vía lightpollutionmap.info. " +
-      "Si no, se usa una ESTIMACIÓN aproximada según el tipo de lugar (ciudad/pueblo/zona rural/área protegida), que no proviene de mediciones satelitales. " +
-      "El resultado siempre indica de cuál de las dos fuentes proviene. " +
-      "Nombre del lugar: geocodificación de OpenStreetMap/Nominatim, puede no ser exacto en zonas muy despobladas.",
+      "Clima: se utiliza el pronóstico de OpenWeather, con bloques de 3 horas y un horizonte máximo de 5 días hacia adelante (más allá de eso no hay datos disponibles, y la aplicación lo indica). " +
+      "Sol y luna: los horarios de salida, puesta, inicio y fin de la noche astronómica, y la posición/fase lunar, se calculan matemáticamente con la librería SunCalc, que tiene alta precisión astronómica y no depende de ningún servicio externo. " +
+      "Contaminación lumínica (escala de Bortle): cuando está disponible, se utiliza el World Atlas 2015 (Falchi et al.), un estudio científico basado en datos satelitales reales de los sensores VIIRS de NASA/NOAA, consultado a través del servicio lightpollutionmap.info. " +
+      "Cuando ese servicio no está configurado o no responde, se utiliza en su lugar una ESTIMACIÓN aproximada según el tipo de lugar (ciudad, pueblo, zona rural o área protegida), que no proviene de mediciones satelitales y debe tomarse solo como una referencia general. " +
+      "El resultado siempre indica explícitamente de cuál de las dos fuentes proviene el valor mostrado. " +
+      "Nombre del lugar: se obtiene por geocodificación inversa a través de OpenStreetMap/Nominatim, un servicio colaborativo y gratuito que puede no tener nombres precisos en zonas muy despobladas o rurales. " +
+      "Recomendación general: toda la información brindada por la aplicación es una ayuda para la planificación, no un reemplazo del criterio profesional del guía u operador en el momento de la actividad.",
   },
 };
 
@@ -174,7 +181,7 @@ export default function Home() {
 
       setData({ weather: promedio, solLuna, bortle: bortleInfo.bortle, bortleComentario: bortleInfo.comentario });
       setAdvice(generarConsejo(promedio, bortleInfo.bortle, solLuna?.iluminacionLunarPorc));
-      setDescripcionNoche(generarDescripcionNoche(bloques, solLuna, bortleInfo));
+      setDescripcionNoche(generarDescripcionNoche(bloques, solLuna, bortleInfo, rango.desde));
     } else {
       setErrorMsg(weatherResult.reason?.message || "No se pudo obtener el clima para este punto y horario.");
     }
@@ -227,25 +234,25 @@ export default function Home() {
   }
 
   return (
-    <div className="pagina" style={{ textAlign: "center" }}>
+    <div className="pagina" style={{ textAlign: "center" }} onClick={() => setPanelInfo(null)}>
       <header>
         <img src="/logo.png" alt="Logo Astroturismo" className="logo" />
         <h1 className="titulo">Astroturismo Inteligente</h1>
         <p className="contacto">Contacto: info@astroturismo.com.ar</p>
         <nav className="nav-botones">
-          {Object.entries(INFO_BOTONES).map(([clave, info]) => (
-            <button
-              key={clave}
-              className="boton-naranja"
-              onClick={() => setPanelInfo(panelInfo === clave ? null : clave)}
-            >
-              {info.titulo}
-            </button>
-          ))}
+          <button
+            className="boton-naranja"
+            onClick={(e) => {
+              e.stopPropagation();
+              setPanelInfo(panelInfo === "descripcion" ? null : "descripcion");
+            }}
+          >
+            {INFO_DESCRIPCION.titulo}
+          </button>
         </nav>
-        {panelInfo && (
-          <div className="panel-info">
-            <p>{INFO_BOTONES[panelInfo].texto}</p>
+        {panelInfo === "descripcion" && (
+          <div className="panel-info" onClick={(e) => e.stopPropagation()}>
+            <p>{INFO_DESCRIPCION.texto}</p>
           </div>
         )}
       </header>
@@ -326,6 +333,28 @@ export default function Home() {
       )}
 
       {data && <Results data={data} advice={advice} descripcionNoche={descripcionNoche} />}
+
+      <footer className="pie-pagina">
+        <nav className="nav-botones">
+          {Object.entries(INFO_BOTONES_FOOTER).map(([clave, info]) => (
+            <button
+              key={clave}
+              className="boton-naranja"
+              onClick={(e) => {
+                e.stopPropagation();
+                setPanelInfo(panelInfo === clave ? null : clave);
+              }}
+            >
+              {info.titulo}
+            </button>
+          ))}
+        </nav>
+        {(panelInfo === "quienes" || panelInfo === "precision") && (
+          <div className="panel-info" onClick={(e) => e.stopPropagation()}>
+            <p>{INFO_BOTONES_FOOTER[panelInfo].texto}</p>
+          </div>
+        )}
+      </footer>
     </div>
   );
 }

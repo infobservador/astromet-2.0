@@ -14,10 +14,22 @@ async function consultarDatoSatelital(lat, lon) {
   if (!r.ok) throw new Error(`lightpollutionmap.info respondió ${r.status}`);
 
   const texto = (await r.text()).trim();
-  // La respuesta es CSV; nos quedamos con el último valor numérico de la línea.
-  const partes = texto.split(",");
-  const valor = parseFloat(partes[partes.length - 1]);
-  if (isNaN(valor)) throw new Error("Respuesta inesperada de lightpollutionmap.info");
+
+  // La documentación no fija un único formato estricto de respuesta para "point";
+  // probamos JSON primero, y si no, interpretamos como CSV/texto plano con el
+  // valor numérico (a veces solo el número, a veces "lon,lat,valor").
+  let valor;
+  try {
+    const json = JSON.parse(texto);
+    valor = typeof json === "number" ? json : json.value ?? json.Value ?? json.result ?? null;
+  } catch {
+    const partes = texto.split(",");
+    valor = parseFloat(partes[partes.length - 1]);
+  }
+
+  if (valor === null || valor === undefined || isNaN(valor)) {
+    throw new Error(`Respuesta inesperada de lightpollutionmap.info: "${texto}"`);
+  }
 
   return valor; // brillo artificial en mcd/m²
 }

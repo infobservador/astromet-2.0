@@ -48,11 +48,9 @@ function IconoLuna({ flecha }) {
 function IconoNoche() {
   return (
     <IconoBase>
-      <path d="M22 8a12 12 0 1 0 10 17A9 9 0 0 1 22 8Z" />
-      <line x1="33" y1="8" x2="33" y2="14" />
-      <line x1="30" y1="11" x2="36" y2="11" />
-      <line x1="6" y1="26" x2="6" y2="30" />
-      <line x1="4" y1="28" x2="8" y2="28" />
+      <path d="M10 12 L11.5 16 L15.5 17.5 L11.5 19 L10 23 L8.5 19 L4.5 17.5 L8.5 16 Z" fill="currentColor" stroke="none" />
+      <path d="M27 6 L28 9 L31 10 L28 11 L27 14 L26 11 L23 10 L26 9 Z" fill="currentColor" stroke="none" />
+      <path d="M31 20 L31.7 22 L33.5 22.7 L31.7 23.5 L31 25.5 L30.3 23.5 L28.5 22.7 L30.3 22 Z" fill="currentColor" stroke="none" />
     </IconoBase>
   );
 }
@@ -152,27 +150,37 @@ export default function Results({ data, advice, descripcionNoche }) {
 
       <h3>Sol y Luna</h3>
       {solLuna ? (
-        <div className="tarjetas-grid">
-          <Tarjeta icono={<IconoSol flecha="abajo" />} etiqueta="Puesta de sol" valor={formatHora(solLuna.puestaSol)} />
-          <Tarjeta icono={<IconoNoche />} etiqueta="Comienza noche astronómica" valor={formatHora(solLuna.inicioNocheAstronomica)} />
-          <Tarjeta icono={<IconoNoche />} etiqueta="Termina noche astronómica" valor={formatHora(solLuna.finNocheAstronomica)} />
-          <Tarjeta icono={<IconoSol flecha="arriba" />} etiqueta="Salida del sol" valor={formatHora(solLuna.salidaSol)} />
-          <Tarjeta
-            icono={<IconoLuna flecha="arriba" />}
-            etiqueta="Salida de la luna"
-            valor={solLuna.lunaSiempreArriba ? "No se pone hoy" : formatHora(solLuna.salidaLuna)}
-          />
-          <Tarjeta
-            icono={<IconoLuna flecha="abajo" />}
-            etiqueta="Puesta de la luna"
-            valor={solLuna.lunaSiempreAbajo ? "No sale hoy" : formatHora(solLuna.puestaLuna)}
-          />
-          <Tarjeta
-            icono={<IconoFaseLunar porcentaje={solLuna.iluminacionLunarPorc} />}
-            etiqueta="Iluminación lunar"
-            valor={`${solLuna.iluminacionLunarPorc}%`}
-          />
-        </div>
+        <>
+          <div className="columnas-sol-luna">
+            <div className="columna">
+              <Tarjeta icono={<IconoSol flecha="arriba" />} etiqueta="Salida del sol" valor={formatHora(solLuna.salidaSol)} />
+              <Tarjeta icono={<IconoSol flecha="abajo" />} etiqueta="Puesta de sol" valor={formatHora(solLuna.puestaSol)} />
+            </div>
+            <div className="columna">
+              <Tarjeta icono={<IconoNoche />} etiqueta="Comienza noche astronómica" valor={formatHora(solLuna.inicioNocheAstronomica)} />
+              <Tarjeta icono={<IconoNoche />} etiqueta="Termina noche astronómica" valor={formatHora(solLuna.finNocheAstronomica)} />
+            </div>
+            <div className="columna">
+              <Tarjeta
+                icono={<IconoLuna flecha="arriba" />}
+                etiqueta="Salida de la luna"
+                valor={solLuna.lunaSiempreArriba ? "No se pone hoy" : formatHora(solLuna.salidaLuna)}
+              />
+              <Tarjeta
+                icono={<IconoLuna flecha="abajo" />}
+                etiqueta="Puesta de la luna"
+                valor={solLuna.lunaSiempreAbajo ? "No sale hoy" : formatHora(solLuna.puestaLuna)}
+              />
+            </div>
+          </div>
+          <div className="tarjetas-grid tarjeta-iluminacion">
+            <Tarjeta
+              icono={<IconoFaseLunar porcentaje={solLuna.iluminacionLunarPorc} />}
+              etiqueta="Iluminación lunar"
+              valor={`${solLuna.iluminacionLunarPorc}%`}
+            />
+          </div>
+        </>
       ) : (
         <p>No se pudieron calcular los horarios de sol y luna.</p>
       )}
