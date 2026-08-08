@@ -73,11 +73,12 @@ function promediar(bloques) {
 }
 
 export default async function handler(req, res) {
-  const { lat, lon, desde, hasta } = req.query;
+  const { parsearCoordenadas } = require("../../lib/validacion");
+  const { lat: latRaw, lon: lonRaw, desde, hasta } = req.query;
 
-  if (!lat || !lon) {
-    return res.status(400).json({ error: "Faltan parámetros lat y lon" });
-  }
+  const coords = parsearCoordenadas(latRaw, lonRaw);
+  if (coords.error) return res.status(400).json({ error: coords.error });
+  const { lat, lon } = coords;
 
   let desdeMs, hastaMs;
   if (desde && hasta) {
@@ -85,6 +86,13 @@ export default async function handler(req, res) {
     hastaMs = Date.parse(hasta);
     if (isNaN(desdeMs) || isNaN(hastaMs) || hastaMs <= desdeMs) {
       return res.status(400).json({ error: "Rango de fecha/hora inválido." });
+    }
+    // Defensa adicional por si alguien arma la URL a mano (el formulario ya limita a
+    // 15 días hacia adelante y no permite fechas pasadas, pero esto protege la API
+    // igual si se la llama directo).
+    const ahoraMs = Date.now();
+    if (desdeMs < ahoraMs - 2 * 24 * 60 * 60 * 1000 || desdeMs > ahoraMs + 20 * 24 * 60 * 60 * 1000) {
+      return res.status(400).json({ error: "La fecha está fuera del rango permitido." });
     }
   } else {
     desdeMs = Date.now();

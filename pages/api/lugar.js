@@ -1,12 +1,18 @@
 // Geocodificación inversa: coordenadas -> nombre del lugar.
 // Usa Nominatim (OpenStreetMap), gratuito. Se llama desde el servidor (no desde
 // el navegador) porque Nominatim exige identificar la app con un User-Agent.
-export default async function handler(req, res) {
-  const { lat, lon } = req.query;
+import { parsearCoordenadas } from "../../lib/validacion";
 
-  if (!lat || !lon) {
-    return res.status(400).json({ error: "Faltan parámetros lat y lon" });
+export default async function handler(req, res) {
+  const { lat: latRaw, lon: lonRaw } = req.query;
+
+  const coords = parsearCoordenadas(latRaw, lonRaw);
+  if (coords.error) {
+    // Esta ruta nunca debe romper la app: si las coordenadas son inválidas, devolvemos
+    // "sin nombre" en vez de un error, ya que solo se usa para mostrar un dato extra.
+    return res.status(200).json({ nombre: null, address: {} });
   }
+  const { lat, lon } = coords;
 
   try {
     const r = await fetch(

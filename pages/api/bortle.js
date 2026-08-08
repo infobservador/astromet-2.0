@@ -1,4 +1,5 @@
 import { brilloArtificialABortle, estimarBortlePorTipoDeLugar } from "../../lib/astro";
+import { parsearCoordenadas } from "../../lib/validacion";
 
 // Intenta primero el dato satelital real (World Atlas 2015 / NASA-NOAA VIIRS) vía
 // lightpollutionmap.info, si hay una LIGHTPOLLUTION_KEY configurada. Si no hay
@@ -35,11 +36,11 @@ async function consultarDatoSatelital(lat, lon) {
 }
 
 export default async function handler(req, res) {
-  const { lat, lon } = req.query;
+  const { lat: latRaw, lon: lonRaw } = req.query;
 
-  if (!lat || !lon) {
-    return res.status(400).json({ error: "Faltan parámetros lat y lon" });
-  }
+  const coords = parsearCoordenadas(latRaw, lonRaw);
+  if (coords.error) return res.status(400).json({ error: coords.error });
+  const { lat, lon } = coords;
 
   try {
     if (process.env.LIGHTPOLLUTION_KEY) {

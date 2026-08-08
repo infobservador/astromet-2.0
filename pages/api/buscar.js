@@ -5,6 +5,9 @@ export default async function handler(req, res) {
   if (!q || q.trim().length < 2) {
     return res.status(400).json({ error: "Escribí al menos 2 caracteres para buscar." });
   }
+  if (q.length > 200) {
+    return res.status(400).json({ error: "El texto de búsqueda es demasiado largo." });
+  }
 
   try {
     const r = await fetch(

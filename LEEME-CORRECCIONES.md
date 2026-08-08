@@ -211,3 +211,29 @@
   días hacia adelante.
 - El promedio ya no se calcula en el navegador (`pages/index.js`); lo devuelve directo
   la API, ya combinado.
+
+# Undécima pasada: validación "a prueba de tontos"
+
+- **Fecha y hora** (`construirRangoFechaHora` en `pages/index.js`):
+  - Las horas "Desde"/"Hasta" ahora se validan con una expresión regular que exige un
+    entero exacto: rechaza decimales ("3.5"), texto ("abc"), notación científica ("5e3")
+    y vacíos, además de seguir rechazando números fuera de 0-23 (incluidos negativos).
+  - La fecha rechaza años absurdos (antes de 2020 o después de 2100) aunque el formato
+    sea válido.
+  - Se separó el chequeo de "ya pasó" (con margen de 3 hs) del de "demasiado en el
+    pasado" (más de 1 día atrás, por si se tipea una fecha vieja a mano).
+  - El selector de fecha del formulario ahora tiene tope máximo de 15 días (antes solo
+    tenía mínimo "hoy"), acorde al horizonte real de pronóstico disponible.
+  - Los campos de hora ahora tienen `step="1"` e `inputMode="numeric"` para desalentar
+    decimales desde el teclado, además de la validación real del lado del código.
+- **Coordenadas** (nuevo `lib/validacion.js`, usado en `weather.js`, `solyluna.js`,
+  `bortle.js` y `lugar.js`): valida que lat/lon sean números (no texto), estén presentes,
+  y dentro de rango real (-90 a 90 / -180 a 180). Esto protege la API por si alguien arma
+  la URL a mano, aunque desde la interfaz normal las coordenadas siempre vienen del mapa
+  o del buscador.
+- **Rango de fecha/hora en `pages/api/weather.js`**: además de la validación del
+  formulario, la API ahora rechaza directamente fechas fuera de un rango razonable
+  (más de 2 días atrás o más de 20 días adelante), como defensa adicional si se llama
+  a la API directamente sin pasar por el formulario.
+- **Búsqueda por texto** (`pages/api/buscar.js`): además del mínimo de 2 caracteres, ahora
+  también rechaza textos de más de 200 caracteres.

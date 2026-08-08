@@ -37,19 +37,34 @@ const INFO_BOTONES_FOOTER = {
   },
 };
 
+// Acepta solo enteros (con o sin signo "-"), rechaza decimales, texto, notación
+// científica, vacíos, etc. — así "3.5", "3e1", "abc" o "" nunca pasan como hora válida.
+function esEnteroValido(valor) {
+  return /^-?\d+$/.test(String(valor).trim());
+}
+
 function construirRangoFechaHora(fecha, desdeHora, hastaHora) {
+  if (!fecha) return { error: "Elegí una fecha." };
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(fecha)) return { error: "La fecha no tiene un formato válido." };
+
+  const fechaBase = new Date(`${fecha}T00:00:00`);
+  if (isNaN(fechaBase.getTime())) return { error: "La fecha elegida no es válida." };
+
+  // Rechaza años absurdos aunque el formato sea correcto (ej: typos como "0002" o "9999").
+  const anio = fechaBase.getFullYear();
+  if (anio < 2020 || anio > 2100) return { error: "El año de la fecha no es válido." };
+
+  if (!esEnteroValido(desdeHora)) return { error: "La hora 'Desde' debe ser un número entero, sin decimales ni texto." };
+  if (!esEnteroValido(hastaHora)) return { error: "La hora 'Hasta' debe ser un número entero, sin decimales ni texto." };
+
   const desdeH = parseInt(desdeHora, 10);
   const hastaH = parseInt(hastaHora, 10);
 
-  if (!fecha) return { error: "Elegí una fecha." };
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(fecha)) return { error: "La fecha no tiene un formato válido." };
-  if (isNaN(desdeH) || desdeH < 0 || desdeH > 23) return { error: "La hora 'Desde' debe ser un número entre 0 y 23." };
-  if (isNaN(hastaH) || hastaH < 0 || hastaH > 23) return { error: "La hora 'Hasta' debe ser un número entre 0 y 23." };
+  if (desdeH < 0 || desdeH > 23) return { error: "La hora 'Desde' debe estar entre 0 y 23." };
+  if (hastaH < 0 || hastaH > 23) return { error: "La hora 'Hasta' debe estar entre 0 y 23." };
 
   const desde = new Date(`${fecha}T${String(desdeH).padStart(2, "0")}:00:00`);
   let hasta = new Date(`${fecha}T${String(hastaH).padStart(2, "0")}:00:00`);
-
-  if (isNaN(desde.getTime())) return { error: "La fecha elegida no es válida." };
 
   // Si "hasta" es igual o anterior a "desde", asumimos que cruza la medianoche (ej: 19hs a 3hs del otro día).
   if (hasta <= desde) {
@@ -57,11 +72,20 @@ function construirRangoFechaHora(fecha, desdeHora, hastaHora) {
   }
 
   const ahora = new Date();
-  const limiteMax = new Date(ahora.getTime() + 15 * 24 * 60 * 60 * 1000);
 
+  // Ya pasó (con 3 hs de margen para no rechazar "esta noche" recién empezada).
   if (hasta < new Date(ahora.getTime() - 3 * 60 * 60 * 1000)) {
     return { error: "La fecha/hora elegida ya pasó." };
   }
+
+  // Demasiado en el pasado (protege contra una fecha tipeada a mano, ej. "2020-01-01").
+  const limiteMin = new Date(ahora.getTime() - 24 * 60 * 60 * 1000);
+  if (desde < limiteMin) {
+    return { error: "Esa fecha ya pasó." };
+  }
+
+  // Demasiado en el futuro (límite real de los pronósticos disponibles: 15 días).
+  const limiteMax = new Date(ahora.getTime() + 15 * 24 * 60 * 60 * 1000);
   if (desde > limiteMax) {
     return { error: "Solo se puede pronosticar el clima hasta 15 días hacia adelante." };
   }
@@ -114,6 +138,11 @@ function generarConsejo(clima, bortle, iluminacionLunarPorc) {
 
 function hoyISO() {
   const d = new Date();
+  return d.toISOString().slice(0, 10);
+}
+
+function maxFechaISO() {
+  const d = new Date(Date.now() + 15 * 24 * 60 * 60 * 1000);
   return d.toISOString().slice(0, 10);
 }
 
@@ -286,7 +315,13 @@ export default function Home() {
       <div className="fecha-hora">
         <label>
           Fecha:
-          <input type="date" value={fecha} onChange={(e) => setFecha(e.target.value)} min={hoyISO()} />
+          <input
+            type="date"
+            value={fecha}
+            onChange={(e) => setFecha(e.target.value)}
+            min={hoyISO()}
+            max={maxFechaISO()}
+          />
         </label>
         <label>
           Desde (hs):
@@ -294,6 +329,8 @@ export default function Home() {
             type="number"
             min="0"
             max="23"
+            step="1"
+            inputMode="numeric"
             value={desdeHora}
             onChange={(e) => setDesdeHora(e.target.value)}
           />
@@ -304,6 +341,8 @@ export default function Home() {
             type="number"
             min="0"
             max="23"
+            step="1"
+            inputMode="numeric"
             value={hastaHora}
             onChange={(e) => setHastaHora(e.target.value)}
           />
