@@ -41,20 +41,26 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: "Faltan parámetros lat y lon" });
   }
 
-  try {
-    const brilloArtificial = await consultarDatoSatelital(parseFloat(lat), parseFloat(lon));
+  let diagnostico = null;
 
-    if (brilloArtificial !== null) {
-      const { bortle, sqm } = brilloArtificialABortle(brilloArtificial);
-      return res.status(200).json({
-        bortle,
-        comentario: `Estimado con datos satelitales reales (World Atlas 2015, NASA/NOAA VIIRS). SQM: ${sqm} mag/arcsec².`,
-        fuente: "satelital",
-      });
+  try {
+    if (!process.env.LIGHTPOLLUTION_KEY) {
+      diagnostico = "DIAGNÓSTICO: no se encontró la variable de entorno LIGHTPOLLUTION_KEY en el servidor.";
+    } else {
+      const brilloArtificial = await consultarDatoSatelital(parseFloat(lat), parseFloat(lon));
+
+      if (brilloArtificial !== null) {
+        const { bortle, sqm } = brilloArtificialABortle(brilloArtificial);
+        return res.status(200).json({
+          bortle,
+          comentario: `Estimado con datos satelitales reales (World Atlas 2015, NASA/NOAA VIIRS). SQM: ${sqm} mag/arcsec².`,
+          fuente: "satelital",
+        });
+      }
     }
   } catch (err) {
     console.error("Error consultando dato satelital de contaminación lumínica:", err.message);
-    // Sigue de largo al respaldo por tipo de lugar.
+    diagnostico = `DIAGNÓSTICO: ${err.message}`;
   }
 
   try {
@@ -64,7 +70,11 @@ export default async function handler(req, res) {
     );
     const data = r.ok ? await r.json() : null;
     const { bortle, comentario } = estimarBortlePorTipoDeLugar(data?.address);
-    res.status(200).json({ bortle, comentario, fuente: "estimado" });
+    res.status(200).json({
+      bortle,
+      comentario: diagnostico ? `${comentario} — ${diagnostico}` : comentario,
+      fuente: "estimado",
+    });
   } catch (err) {
     console.error("Error estimando contaminación lumínica:", err.message);
     res.status(200).json({
