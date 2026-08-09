@@ -19,8 +19,12 @@ export default function Admin() {
     const guardada = window.sessionStorage.getItem("astroturismo_admin_clave");
     if (guardada) {
       setClave(guardada);
-      setClaveGuardada(guardada);
+      // Antes solo se guardaba la clave, sin volver a pedir la lista de operadores —
+      // por eso, al refrescar la página, el panel se veía "vacío" aunque los datos
+      // seguían en la base. Ahora sí vuelve a cargarlos.
+      cargarOperadores(guardada);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function cargarOperadores(claveAUsar) {
@@ -100,7 +104,12 @@ export default function Admin() {
 
   return (
     <div style={{ maxWidth: 700, margin: "40px auto", padding: 20, fontFamily: "sans-serif" }}>
-      <h2>Operadores y créditos</h2>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+        <h2>Operadores y créditos</h2>
+        <button onClick={() => cargarOperadores(claveGuardada)} disabled={cargando} style={{ padding: "6px 14px" }}>
+          {cargando ? "Actualizando..." : "🔄 Actualizar"}
+        </button>
+      </div>
       {error && <p style={{ color: "red" }}>{error}</p>}
 
       <form onSubmit={guardarOperador} style={{ display: "flex", gap: 8, marginBottom: 24, flexWrap: "wrap" }}>

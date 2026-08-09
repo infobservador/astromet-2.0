@@ -454,3 +454,21 @@ buena opción, con alta gratuita instantánea, sin trámite de aprobación manua
   `UPSTASH_REDIS_REST_TOKEN` antes de usarlos, para que un espacio de más al copiar/
   pegar la clave en Vercel no rompa la conexión con un error confuso (esto fue lo que
   pasó: quedó un espacio antes de "https://" al pegar la URL).
+
+# Vigésimo primera pasada: botón de actualizar en el panel de admin
+
+- `pages/admin.js` no volvía a consultar la lista de operadores sola — por eso, después
+  de usar créditos desde la app, la tabla del panel seguía mostrando el número viejo
+  hasta recargar toda la página a mano. El descuento en la base de datos sí funcionaba
+  bien (por eso la app mostraba el número correcto); era solo un tema de que el panel
+  no se refrescaba.
+- Se agregó un botón "🔄 Actualizar" arriba de la tabla para refrescar la lista sin
+  tener que recargar toda la página ni volver a escribir la clave de administrador.
+
+# Vigésimo segunda pasada: bug real en /admin (mostraba "vacío" al refrescar)
+
+- Encontrado y corregido: al refrescar la página `/admin`, el panel recuperaba la clave
+  guardada de la sesión del navegador, pero **nunca volvía a pedirle la lista de
+  operadores al servidor** — por eso se veía "Todavía no hay operadores creados" aunque
+  los datos seguían perfectamente en la base de datos. Ahora, al recuperar la clave
+  guardada, también se vuelve a cargar la lista real.
