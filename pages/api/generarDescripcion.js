@@ -9,6 +9,7 @@
 
 import { generarDescripcionNoche } from "../../lib/descripcionNoche";
 import { evaluarBanderaRoja } from "../../lib/seguridad";
+import { obtenerOperador, descontarCredito } from "../../lib/creditos";
 
 function armarPrompt({ lugarNombre, fecha, desdeHora, hastaHora, bloques, solLuna, bortleInfo }) {
   const resumenBloques = bloques
@@ -65,7 +66,7 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: "Método no permitido" });
   }
 
-  const { lugarNombre, fecha, desdeHora, hastaHora, bloques, solLuna, bortleInfo } = req.body || {};
+  const { lugarNombre, fecha, desdeHora, hastaHora, bloques, solLuna, bortleInfo, codigoOperador } = req.body || {};
 
   if (!Array.isArray(bloques) || bloques.length === 0) {
     return res.status(400).json({ error: "Faltan datos de clima para generar la descripción." });
@@ -88,7 +89,20 @@ export default async function handler(req, res) {
 
   const apiKey = process.env.ANTHROPIC_API_KEY;
 
-  if (apiKey) {
+  // Sistema de créditos: si se manda un código de operador, el uso de IA requiere
+  // saldo disponible y se descuenta 1 crédito SOLO si la generación fue exitosa. Si NO
+  // se manda código (uso interno/administrador), la IA se usa libremente mientras haya
+  // ANTHROPIC_API_KEY configurada — así el sistema de créditos es una capa opcional
+  // para operadores externos, sin romper el uso interno que ya existía.
+  let operadorInfo = null;
+  let puedeUsarIA = !!apiKey;
+
+  if (apiKey && codigoOperador) {
+    operadorInfo = await obtenerOperador(codigoOperador);
+    puedeUsarIA = !!operadorInfo && operadorInfo.creditos > 0;
+  }
+
+  if (puedeUsarIA) {
     try {
       const prompt = armarPrompt({ lugarNombre, fecha, desdeHora, hastaHora, bloques, solLuna, bortleInfo });
 
@@ -120,10 +134,17 @@ export default async function handler(req, res) {
         .map((p) => p.replace(/^#+\s*/, "").replace(/\*\*/g, ""))
         .filter((p) => p.length > 0);
 
-      return res.status(200).json({ parrafos, fuente: "ia", banderaRoja: false });
+      // Recién acá, con la generación ya lista, se descuenta el crédito.
+      let creditosRestantes = operadorInfo ? operadorInfo.creditos : null;
+      if (codigoOperador && operadorInfo) {
+        const actualizado = await descontarCredito(codigoOperador);
+        creditosRestantes = actualizado ? actualizado.creditos : creditosRestantes;
+      }
+
+      return res.status(200).json({ parrafos, fuente: "ia", banderaRoja: false, creditosRestantes });
     } catch (err) {
       console.error("Error generando descripción con IA, se usa el generador por reglas:", err.message);
-      // Sigue de largo al respaldo por reglas.
+      // No se descontó crédito (la generación falló). Sigue de largo al respaldo por reglas.
     }
   }
 
@@ -132,5 +153,10 @@ export default async function handler(req, res) {
   const inicioVentana =
     fecha && !isNaN(desdeH) ? new Date(`${fecha}T${String(desdeH).padStart(2, "0")}:00:00`) : new Date();
   const parrafos = generarDescripcionNoche(bloques, solLuna, bortleInfo, inicioVentana);
-  res.status(200).json({ parrafos, fuente: "reglas", banderaRoja: false });
+  res.status(200).json({
+    parrafos,
+    fuente: "reglas",
+    banderaRoja: false,
+    creditosRestantes: operadorInfo ? operadorInfo.creditos : null,
+  });
 }

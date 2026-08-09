@@ -402,3 +402,48 @@ buena opción, con alta gratuita instantánea, sin trámite de aprobación manua
 - Se editó el archivo de imagen directamente (no se volvió a generar desde cero):
   el "2.0" estaba separado del trazo del swoosh naranja sin tocarlo, así que se pudo
   borrar limpio sin dejar cortes ni artefactos en el resto del diseño.
+
+# Decimonovena pasada: sistema de créditos (Fase 1)
+
+## Qué se agregó
+- **`lib/creditos.js`**: capa de datos usando Upstash Redis (conectado vía Vercel
+  Marketplace Storage — Vercel KV como producto propio fue discontinuado, ahora se
+  contrata así). Guarda por cada operador: código de acceso, nombre, y saldo de
+  créditos.
+- **`pages/api/admin/operadores.js`**: ruta protegida con `ADMIN_SECRET` para crear,
+  editar, listar y borrar operadores. Solo vos podés usarla.
+- **`pages/api/creditos/consultar.js`**: consulta pública de saldo por código.
+- **`pages/admin.js`**: panel simple en `/admin` (no enlazado desde ningún botón de la
+  app, se accede escribiendo la URL directamente) para gestionar operadores sin tocar
+  código. Pide la clave de administrador una sola vez por sesión del navegador.
+- **`pages/api/generarDescripcion.js`**: si se manda un `codigoOperador`, la IA queda
+  atada al saldo de ESE operador — se descuenta 1 crédito SOLO si la generación fue
+  exitosa (si falla, no se cobra). Si el operador no tiene créditos, cae automáticamente
+  al generador gratuito por reglas, sin cortar el servicio. **Si no se manda código**
+  (uso interno, como venías probando hasta ahora), la IA sigue funcionando igual que
+  antes, sin límite de créditos — así no se rompe nada de lo que ya tenías.
+- En la app: campo opcional "Código de operador" (se guarda en el navegador de cada
+  uno) y, cuando corresponde, se muestran los créditos disponibles.
+
+## Cómo activarlo (nuevo paso en Vercel)
+1. En tu proyecto de Vercel → pestaña **Storage** → **Create Database** → elegí
+   **Upstash** → **Redis** → seguí el asistente y conectalo a tu proyecto
+   `astromet-2.0`. Esto agrega solo las variables `UPSTASH_REDIS_REST_URL` y
+   `UPSTASH_REDIS_REST_TOKEN` a tu proyecto (no hace falta copiarlas a mano).
+2. En **Settings → Environment Variables**, agregá `ADMIN_SECRET` con una clave que
+   elijas vos (larga, difícil de adivinar — esto NO lo genera ningún servicio externo,
+   la inventás vos).
+3. Redeploy.
+4. Entrá a `tu-app.vercel.app/admin`, poné la clave que elegiste, y creá tu primer
+   operador (código corto, nombre, cantidad de créditos).
+5. Compartile ese código al operador — lo tiene que poner en el campo "Código de
+   operador" de la app. Mientras tenga saldo, va a generar descripciones con IA; cuando
+   se le acabe, la app sigue funcionando gratis con el generador por reglas.
+
+## Qué NO incluye todavía esta fase (a propósito)
+- No hay cobro automático: los créditos los cargás vos a mano desde `/admin` después
+  de que alguien te pague por fuera (transferencia, efectivo, Mercado Pago manual, lo
+  que uses hoy).
+- No hay registro autoservicio para operadores nuevos — los creás vos.
+- Esto es intencional: la idea de la Fase 1 es probar el sistema de créditos con tu
+  gente real antes de meter cobro automático (Fase 2) y alta autoservicio (Fase 3).

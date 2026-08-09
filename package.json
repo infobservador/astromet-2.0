@@ -14,6 +14,7 @@
     "leaflet": "^1.9.4",
     "react-leaflet": "^4.2.1",
     "suncalc": "latest",
-    "jspdf": "^2.5.1"
+    "jspdf": "^2.5.1",
+    "@upstash/redis": "^1.31.0"
   }
 }

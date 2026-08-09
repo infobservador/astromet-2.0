@@ -536,3 +536,38 @@ body {
   border: 1px solid #ff4d4d;
   background-color: #3a1414;
 }
+
+/* --- Código de operador (créditos) --- */
+.codigo-operador {
+  max-width: 480px;
+  margin: 0 auto 16px;
+  text-align: left;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.codigo-operador label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--texto-tenue);
+  font-size: 0.82rem;
+}
+
+.codigo-operador input {
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--azul-claro);
+  background-color: #0e1f3f;
+  color: var(--texto-claro);
+  font-family: inherit;
+  width: 140px;
+}
+
+.creditos-restantes {
+  color: var(--naranja);
+  font-size: 0.8rem;
+  font-weight: bold;
+}

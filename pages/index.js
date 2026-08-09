@@ -190,19 +190,33 @@ export default function Home() {
   const [resultadosBusqueda, setResultadosBusqueda] = useState([]);
 
   const [favoritos, setFavoritos] = useState([]);
+  const [codigoOperador, setCodigoOperador] = useState("");
+  const [creditosRestantes, setCreditosRestantes] = useState(null);
   const [comparando, setComparando] = useState(false);
   const [cantidadNoches, setCantidadNoches] = useState("7");
   const [resultadosComparacion, setResultadosComparacion] = useState(null);
 
-  // Carga los favoritos guardados en este navegador (localStorage), si hay alguno.
+  // Carga los favoritos y el código de operador guardados en este navegador (localStorage).
   useEffect(() => {
     try {
       const guardados = window.localStorage.getItem("astroturismo_favoritos");
       if (guardados) setFavoritos(JSON.parse(guardados));
+      const codigo = window.localStorage.getItem("astroturismo_codigo_operador");
+      if (codigo) setCodigoOperador(codigo);
     } catch {
-      // Si localStorage no está disponible o el dato es inválido, seguimos sin favoritos.
+      // Si localStorage no está disponible o el dato es inválido, seguimos sin esos datos.
     }
   }, []);
+
+  function handleGuardarCodigoOperador(codigo) {
+    setCodigoOperador(codigo);
+    try {
+      if (codigo) window.localStorage.setItem("astroturismo_codigo_operador", codigo);
+      else window.localStorage.removeItem("astroturismo_codigo_operador");
+    } catch {
+      // No es crítico si no se puede guardar.
+    }
+  }
 
   function guardarFavoritos(lista) {
     setFavoritos(lista);
@@ -287,12 +301,22 @@ export default function Home() {
         const respuesta = await fetchJSON("/api/generarDescripcion", {
           method: "POST",
           headers: { "content-type": "application/json" },
-          body: JSON.stringify({ lugarNombre, fecha: fechaAUsar, desdeHora, hastaHora, bloques, solLuna, bortleInfo }),
+          body: JSON.stringify({
+            lugarNombre,
+            fecha: fechaAUsar,
+            desdeHora,
+            hastaHora,
+            bloques,
+            solLuna,
+            bortleInfo,
+            codigoOperador: codigoOperador || undefined,
+          }),
         });
         setDescripcionNoche(respuesta.parrafos);
         setDescripcionFuente(respuesta.fuente);
         setBanderaRoja(respuesta.banderaRoja || false);
         setMotivosBanderaRoja(respuesta.motivosBanderaRoja || []);
+        setCreditosRestantes(respuesta.creditosRestantes ?? null);
       } catch {
         const { banderaRoja: peligro, motivos } = evaluarBanderaRoja(bloques);
         setDescripcionNoche(generarDescripcionNoche(bloques, solLuna, bortleInfo, rango.desde));
@@ -478,6 +502,19 @@ export default function Home() {
           </ul>
         )}
       </form>
+
+      <div className="codigo-operador" onClick={(e) => e.stopPropagation()}>
+        <label>
+          Código de operador (opcional):
+          <input
+            type="text"
+            value={codigoOperador}
+            onChange={(e) => handleGuardarCodigoOperador(e.target.value.trim())}
+            placeholder="Dejalo vacío si sos vos mismo probando la app"
+          />
+        </label>
+        {creditosRestantes !== null && <span className="creditos-restantes">Créditos disponibles: {creditosRestantes}</span>}
+      </div>
 
       {favoritos.length > 0 && (
         <div className="favoritos" onClick={(e) => e.stopPropagation()}>
