@@ -310,3 +310,24 @@ buena opción, con alta gratuita instantánea, sin trámite de aprobación manua
   sin costo) para ordenar las noches — la descripción completa con IA solo se genera
   para la noche puntual que se esté mirando en detalle, no para las 15 noches del
   comparador (para no generar 15 llamadas a la IA en una sola comparación).
+
+# Decimocuarta pasada: ajuste de enfoque para astroturismo real (no astronomía de investigación)
+
+- El prompt de la IA (`pages/api/generarDescripcion.js`) y el generador local por reglas
+  (`lib/descripcionNoche.js`) ahora dejan explícito que el público es turístico general,
+  no astrónomos con equipo avanzado:
+  - Ya NO se recomiendan objetos débiles (nebulosas tenues, galaxias débiles) que
+    requieren telescopios grandes y larga exposición — un turista no los va a poder ver.
+  - Se prioriza: cúmulos abiertos y globulares BRILLANTES, galaxias brillantes visibles a
+    simple vista o con binoculares, la Vía Láctea, la Luna, planetas (solo si hay datos),
+    y constelaciones reconocibles.
+  - El componente de MITOLOGÍA Y COSMOVISIONES CULTURALES ahora está presente siempre en
+    el texto, no solo como actividad alternativa — y se vuelve el protagonista cuando el
+    cielo está nublado/feo, en vez de perderse.
+- Se corrigieron dos problemas técnicos encontrados al probar el prompt nuevo contra la
+  API real: la IA a veces agregaba un título con formato Markdown (`# ...`) a pesar de
+  la instrucción de no hacerlo, y el texto se cortaba a mitad de frase por un límite de
+  longitud (`max_tokens`) demasiado corto para este prompt más largo. Se subió el límite
+  de 600 a 900 tokens, se reforzó la instrucción contra Markdown, y se agregó una
+  limpieza automática del texto (por si el modelo se olvida) que saca cualquier resto de
+  "#" o "**" antes de mostrarlo.

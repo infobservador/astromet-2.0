@@ -41,15 +41,22 @@ Sol y luna:
 Contaminación lumínica:
 - Escala de Bortle: ${bortleInfo?.bortle ?? "sin dato"} (fuente: ${bortleInfo?.fuente === "satelital" ? "datos satelitales reales" : "estimación por tipo de lugar"})
 
+CONTEXTO IMPORTANTE — Astroturismo, no astronomía de investigación:
+El público es turístico general, no astrónomos con equipo avanzado. Esto significa:
+- NUNCA recomiendes objetos débiles que solo se ven con telescopios grandes y larga exposición (nebulosas tenues, galaxias débiles, cúmulos poco brillantes). Un turista no las va a poder ver a simple vista ni con binoculares/telescopios de aficionado chicos.
+- Enfocate en objetos BRILLANTES y accesibles: cúmulos abiertos brillantes (ej. Las Pléyades), cúmulos globulares brillantes, galaxias brillantes visibles a simple vista o con binoculares (ej. la Vía Láctea como banda, o galaxias satélite si son visibles desde el hemisferio correspondiente), planetas (si sabés cuáles están arriba por los datos, si no, no los nombres), la Luna, y constelaciones reconocibles.
+- El componente de MITOLOGÍA Y CULTURA (historias, cosmovisiones, leyendas asociadas al cielo nocturno) tiene que estar SIEMPRE presente en el texto, en mayor o menor medida — es parte central de la experiencia de astroturismo, no un relleno. Cuando el cielo está feo/nublado, este componente pasa a ser el protagonista de la actividad (ya que no se puede observar bien), no solo una mención de pasada.
+
 Escribí una descripción profesional de la noche en 2 a 3 párrafos cortos, en español rioplatense, que:
 1. Resuma el panorama general de la noche, mencionando horas exactas si hay tramos problemáticos (mucha nubosidad, viento, humedad).
-2. Dé UNA recomendación operativa concreta y accionable, adaptada específicamente a estos datos: qué observar, cómo estructurar la actividad, y si corresponde, qué actividad alternativa ofrecer (mitología, realidad aumentada/virtual, cata de productos regionales, fotografía) si el cielo no acompaña del todo. Elegí lo que mejor encaje esta noche en particular, no listes todas las opciones juntas.
+2. Dé UNA recomendación operativa concreta y accionable, adaptada específicamente a estos datos: qué observar (siempre objetos brillantes/accesibles, nunca objetos débiles), cómo estructurar la actividad, y el componente de mitología/cultura correspondiente. Si el cielo no acompaña, sumá una actividad alternativa (realidad aumentada/virtual, cata de productos regionales, fotografía) — pero la mitología no se reemplaza, se refuerza. Elegí lo que mejor encaje esta noche en particular, no listes todas las opciones juntas.
 
 Restricciones importantes:
 - NO inventes objetos celestes específicos (planetas visibles, lluvias de meteoros, cometas, eclipses) que no estén en los datos de arriba.
+- NO recomiendes objetos de cielo profundo débiles (nebulosas tenues, galaxias débiles) — esto es astroturismo, no observación de investigación.
 - No repitas siempre la misma estructura de frases entre distintas consultas; sonar natural y variado.
 - Tono profesional pero cálido, como un especialista hablándole a un colega del rubro.
-- Sin viñetas ni títulos, solo prosa en párrafos, separados por un salto de línea.`;
+- Empezá directo con el primer párrafo. NO agregues título, encabezado, ni ningún formato Markdown (nada de "#", "**", listas con guiones o viñetas). Solo prosa en párrafos separados por un salto de línea.`;
 }
 
 export default async function handler(req, res) {
@@ -78,7 +85,7 @@ export default async function handler(req, res) {
         },
         body: JSON.stringify({
           model: "claude-haiku-4-5-20251001",
-          max_tokens: 600,
+          max_tokens: 900,
           temperature: 0.9,
           messages: [{ role: "user", content: prompt }],
         }),
@@ -92,6 +99,9 @@ export default async function handler(req, res) {
       const parrafos = texto
         .split("\n")
         .map((p) => p.trim())
+        // Por las dudas, limpia restos de formato Markdown (títulos "#", negrita "**")
+        // aunque el prompt ya le pide a la IA que no los use.
+        .map((p) => p.replace(/^#+\s*/, "").replace(/\*\*/g, ""))
         .filter((p) => p.length > 0);
 
       return res.status(200).json({ parrafos, fuente: "ia" });
