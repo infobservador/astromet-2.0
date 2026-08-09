@@ -34,6 +34,7 @@ const INFO_BOTONES_FOOTER = {
       "Contaminación lumínica (escala de Bortle): cuando está disponible, se utiliza el World Atlas 2015 (Falchi et al.), un estudio científico basado en datos satelitales reales de los sensores VIIRS de NASA/NOAA, consultado a través del servicio lightpollutionmap.info. " +
       "Cuando ese servicio no está configurado o no responde, se utiliza en su lugar una ESTIMACIÓN aproximada según el tipo de lugar (ciudad, pueblo, zona rural o área protegida), que no proviene de mediciones satelitales y debe tomarse solo como una referencia general. " +
       "El resultado siempre indica explícitamente de cuál de las dos fuentes proviene el valor mostrado. " +
+      "Descripción de la noche: cuando está disponible, el texto lo redacta Claude (IA de Anthropic) a partir de los datos ya calculados por la aplicación (nunca inventa datos astronómicos que no estén en esos cálculos). Si la IA no está configurada, se usa en su lugar un generador local por reglas fijas. La aplicación siempre indica cuál de las dos fuentes se usó. " +
       "Nombre del lugar: se obtiene por geocodificación inversa a través de OpenStreetMap/Nominatim, un servicio colaborativo y gratuito que puede no tener nombres precisos en zonas muy despobladas o rurales. " +
       "Recomendación general: toda la información brindada por la aplicación es una ayuda para la planificación, no un reemplazo del criterio profesional del guía u operador en el momento de la actividad.",
   },
@@ -157,6 +158,7 @@ export default function Home() {
   const [data, setData] = useState(null);
   const [advice, setAdvice] = useState(null);
   const [descripcionNoche, setDescripcionNoche] = useState(null);
+  const [descripcionFuente, setDescripcionFuente] = useState(null);
   const [errorMsg, setErrorMsg] = useState("");
   const [loading, setLoading] = useState(false);
   const [panelInfo, setPanelInfo] = useState(null);
@@ -213,8 +215,8 @@ export default function Home() {
     calcularParaUbicacion(fav.lat, fav.lng);
   }
 
-  async function fetchJSON(url) {
-    const res = await fetch(url);
+  async function fetchJSON(url, options) {
+    const res = await fetch(url, options);
     const json = await res.json();
     if (!res.ok) throw new Error(json.error || "Error de red");
     return json;
@@ -234,6 +236,7 @@ export default function Home() {
     setData(null);
     setAdvice(null);
     setDescripcionNoche(null);
+    setDescripcionFuente(null);
 
     const [weatherResult, solYLunaResult, bortleResult, lugarResult] = await Promise.allSettled([
       fetchJSON(`/api/weather?lat=${lat}&lon=${lng}&desde=${rango.desde.toISOString()}&hasta=${rango.hasta.toISOString()}`),
@@ -256,7 +259,22 @@ export default function Home() {
         bortleComentario: bortleInfo.comentario,
       });
       setAdvice(generarConsejo(promedio, bortleInfo.bortle, solLuna?.iluminacionLunarPorc));
-      setDescripcionNoche(generarDescripcionNoche(bloques, solLuna, bortleInfo, rango.desde));
+
+      // La descripción de la noche se genera en el servidor (con IA si está configurada,
+      // si no con el generador local por reglas). Si ni siquiera se puede llamar al
+      // servidor (sin conexión, etc.), usamos el generador local directo como último respaldo.
+      try {
+        const respuesta = await fetchJSON("/api/generarDescripcion", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ lugarNombre, fecha: fechaAUsar, desdeHora, hastaHora, bloques, solLuna, bortleInfo }),
+        });
+        setDescripcionNoche(respuesta.parrafos);
+        setDescripcionFuente(respuesta.fuente);
+      } catch {
+        setDescripcionNoche(generarDescripcionNoche(bloques, solLuna, bortleInfo, rango.desde));
+        setDescripcionFuente("reglas");
+      }
     } else {
       setErrorMsg(weatherResult.reason?.message || "No se pudo obtener el clima para este punto y horario.");
     }
@@ -507,7 +525,9 @@ export default function Home() {
         </div>
       )}
 
-      {data && <Results data={data} advice={advice} descripcionNoche={descripcionNoche} />}
+      {data && (
+        <Results data={data} advice={advice} descripcionNoche={descripcionNoche} descripcionFuente={descripcionFuente} />
+      )}
 
       <div className="comparador" onClick={(e) => e.stopPropagation()}>
         <h3>Comparar varias noches</h3>

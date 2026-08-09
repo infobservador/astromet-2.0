@@ -303,6 +303,19 @@ body {
   border-bottom: none !important;
 }
 
+.descripcion-noche-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.descripcion-fuente {
+  font-size: 0.7rem;
+  color: var(--texto-tenue);
+}
+
 .descripcion-noche p {
   font-size: 0.9rem;
   line-height: 1.5;

@@ -128,7 +128,7 @@ function Tarjeta({ icono, etiqueta, valor }) {
   );
 }
 
-export default function Results({ data, advice, descripcionNoche }) {
+export default function Results({ data, advice, descripcionNoche, descripcionFuente }) {
   const { weather, solLuna, bortle } = data;
 
   return (
@@ -141,7 +141,12 @@ export default function Results({ data, advice, descripcionNoche }) {
 
       {descripcionNoche && descripcionNoche.length > 0 && (
         <div className="descripcion-noche">
-          <h3>Descripción de la noche</h3>
+          <div className="descripcion-noche-header">
+            <h3>Descripción de la noche</h3>
+            {descripcionFuente && (
+              <span className="descripcion-fuente">{descripcionFuente === "ia" ? "✨ Generado con IA" : "Generado por reglas"}</span>
+            )}
+          </div>
           {descripcionNoche.map((parrafo, i) => (
             <p key={i}>{parrafo}</p>
           ))}

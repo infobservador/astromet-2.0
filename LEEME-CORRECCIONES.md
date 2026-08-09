@@ -288,3 +288,25 @@ buena opción, con alta gratuita instantánea, sin trámite de aprobación manua
   siempre requieren señal, ya que vienen de servicios externos en tiempo real. Lo que
   sí permite es que la app no quede en blanco/rota si se corta la señal en el lugar,
   y que se pueda abrir más rápido en visitas siguientes.
+
+# Decimotercera pasada: descripción de la noche generada con IA (opcional)
+
+- Nueva ruta `pages/api/generarDescripcion.js`: le manda a Claude (Anthropic, modelo
+  `claude-haiku-4-5-20251001`, económico) TODOS los datos ya calculados por la app
+  (clima hora por hora, sol/luna, Bortle) y le pide que redacte la descripción de la
+  noche. Se le prohíbe explícitamente inventar datos astronómicos que no estén en la
+  información provista (nada de "hay una lluvia de meteoros" si no lo sabemos).
+- Es OPCIONAL: si no está configurada la variable `ANTHROPIC_API_KEY`, o la llamada
+  falla por cualquier motivo, cae automáticamente en el generador local por reglas de
+  siempre (`lib/descripcionNoche.js`) — la app nunca se rompe por esto ni deja de
+  mostrar una descripción.
+- El resultado ahora indica de dónde salió el texto ("✨ Generado con IA" o "Generado
+  por reglas"), igual que ya hacíamos con el clima y el Bortle.
+- Para activarlo: conseguir una clave en console.anthropic.com (autoservicio, con
+  tarjeta cargada) y agregarla como `ANTHROPIC_API_KEY` en Vercel, igual que las demás
+  variables. Costo estimado: centavos de dólar por consulta con el modelo elegido
+  (Haiku 4.5).
+- El comparador de varias noches sigue usando el puntaje del generador local (rápido y
+  sin costo) para ordenar las noches — la descripción completa con IA solo se genera
+  para la noche puntual que se esté mirando en detalle, no para las 15 noches del
+  comparador (para no generar 15 llamadas a la IA en una sola comparación).

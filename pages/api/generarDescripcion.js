@@ -1,0 +1,110 @@
+// Genera la "Descripción de la noche" con Claude (Anthropic), a partir de los datos
+// YA CALCULADOS por la app (clima, sol/luna, Bortle) — el modelo redacta el texto,
+// pero no inventa ningún dato: se le da todo lo necesario y se le prohíbe explícitamente
+// agregar información astronómica que no esté en los datos provistos.
+//
+// Si no hay ANTHROPIC_API_KEY configurada, o la llamada falla por cualquier motivo,
+// se cae automáticamente en el generador local por reglas (lib/descripcionNoche.js),
+// para que la app nunca se rompa por esto.
+
+import { generarDescripcionNoche } from "../../lib/descripcionNoche";
+
+function armarPrompt({ lugarNombre, fecha, desdeHora, hastaHora, bloques, solLuna, bortleInfo }) {
+  const resumenBloques = bloques
+    .map((b) => {
+      const hora = new Date(b.hora).toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" });
+      return `${hora}: ${b.nubosidad}% nubosidad, ${b.temperatura.toFixed(1)}°C, viento ${b.viento.toFixed(1)} m/s, humedad ${b.humedad}%${b.condicion ? `, condición: ${b.condicion}` : ""}`;
+    })
+    .join("\n");
+
+  return `Sos un asesor experto en astroturismo, redactando para operadores turísticos profesionales que le van a mostrar este texto directamente a sus clientes o usarlo para planificar la actividad. El texto tiene que ser tan útil y específico que justifique pagar por esta herramienta.
+
+DATOS DE LA NOCHE (no inventes nada que no esté acá):
+- Lugar: ${lugarNombre || "sin nombre disponible"}
+- Fecha: ${fecha}
+- Franja horaria elegida: ${desdeHora}:00 a ${hastaHora}:00 hs
+
+Clima por bloque horario:
+${resumenBloques}
+
+Sol y luna:
+- Sale el sol: ${solLuna?.salidaSol ? new Date(solLuna.salidaSol).toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" }) : "sin dato"}
+- Se pone el sol: ${solLuna?.puestaSol ? new Date(solLuna.puestaSol).toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" }) : "sin dato"}
+- Comienza la noche astronómica (cielo totalmente oscuro): ${solLuna?.inicioNocheAstronomica ? new Date(solLuna.inicioNocheAstronomica).toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" }) : "sin dato"}
+- Termina la noche astronómica: ${solLuna?.finNocheAstronomica ? new Date(solLuna.finNocheAstronomica).toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" }) : "sin dato"}
+- Luna arriba del horizonte al inicio de la franja: ${solLuna?.lunaArribaAlInicio ? "sí" : "no"}
+- Altitud de la luna al inicio (grados): ${solLuna?.lunaAltitudInicioGrados ?? "sin dato"}
+- Sale la luna: ${solLuna?.salidaLuna ? new Date(solLuna.salidaLuna).toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" }) : "no aplica/sin dato"}
+- Se pone la luna: ${solLuna?.puestaLuna ? new Date(solLuna.puestaLuna).toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" }) : "no aplica/sin dato"}
+- Iluminación lunar: ${solLuna?.iluminacionLunarPorc ?? "sin dato"}%
+
+Contaminación lumínica:
+- Escala de Bortle: ${bortleInfo?.bortle ?? "sin dato"} (fuente: ${bortleInfo?.fuente === "satelital" ? "datos satelitales reales" : "estimación por tipo de lugar"})
+
+Escribí una descripción profesional de la noche en 2 a 3 párrafos cortos, en español rioplatense, que:
+1. Resuma el panorama general de la noche, mencionando horas exactas si hay tramos problemáticos (mucha nubosidad, viento, humedad).
+2. Dé UNA recomendación operativa concreta y accionable, adaptada específicamente a estos datos: qué observar, cómo estructurar la actividad, y si corresponde, qué actividad alternativa ofrecer (mitología, realidad aumentada/virtual, cata de productos regionales, fotografía) si el cielo no acompaña del todo. Elegí lo que mejor encaje esta noche en particular, no listes todas las opciones juntas.
+
+Restricciones importantes:
+- NO inventes objetos celestes específicos (planetas visibles, lluvias de meteoros, cometas, eclipses) que no estén en los datos de arriba.
+- No repitas siempre la misma estructura de frases entre distintas consultas; sonar natural y variado.
+- Tono profesional pero cálido, como un especialista hablándole a un colega del rubro.
+- Sin viñetas ni títulos, solo prosa en párrafos, separados por un salto de línea.`;
+}
+
+export default async function handler(req, res) {
+  if (req.method !== "POST") {
+    return res.status(405).json({ error: "Método no permitido" });
+  }
+
+  const { lugarNombre, fecha, desdeHora, hastaHora, bloques, solLuna, bortleInfo } = req.body || {};
+
+  if (!Array.isArray(bloques) || bloques.length === 0) {
+    return res.status(400).json({ error: "Faltan datos de clima para generar la descripción." });
+  }
+
+  const apiKey = process.env.ANTHROPIC_API_KEY;
+
+  if (apiKey) {
+    try {
+      const prompt = armarPrompt({ lugarNombre, fecha, desdeHora, hastaHora, bloques, solLuna, bortleInfo });
+
+      const r = await fetch("https://api.anthropic.com/v1/messages", {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "x-api-key": apiKey,
+          "anthropic-version": "2023-06-01",
+        },
+        body: JSON.stringify({
+          model: "claude-haiku-4-5-20251001",
+          max_tokens: 600,
+          temperature: 0.9,
+          messages: [{ role: "user", content: prompt }],
+        }),
+      });
+
+      if (!r.ok) throw new Error(`Anthropic API respondió ${r.status}`);
+      const data = await r.json();
+      const texto = data.content?.[0]?.text;
+      if (!texto) throw new Error("Respuesta vacía de la IA");
+
+      const parrafos = texto
+        .split("\n")
+        .map((p) => p.trim())
+        .filter((p) => p.length > 0);
+
+      return res.status(200).json({ parrafos, fuente: "ia" });
+    } catch (err) {
+      console.error("Error generando descripción con IA, se usa el generador por reglas:", err.message);
+      // Sigue de largo al respaldo por reglas.
+    }
+  }
+
+  // Respaldo: generador local por reglas (sin costo, sin IA).
+  const desdeH = parseInt(desdeHora, 10);
+  const inicioVentana =
+    fecha && !isNaN(desdeH) ? new Date(`${fecha}T${String(desdeH).padStart(2, "0")}:00:00`) : new Date();
+  const parrafos = generarDescripcionNoche(bloques, solLuna, bortleInfo, inicioVentana);
+  res.status(200).json({ parrafos, fuente: "reglas" });
+}
