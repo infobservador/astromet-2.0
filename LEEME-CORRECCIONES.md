@@ -331,3 +331,20 @@ buena opción, con alta gratuita instantánea, sin trámite de aprobación manua
   de 600 a 900 tokens, se reforzó la instrucción contra Markdown, y se agregó una
   limpieza automática del texto (por si el modelo se olvida) que saca cualquier resto de
   "#" o "**" antes de mostrarlo.
+
+# Decimoquinta pasada: bug del service worker (por eso había que forzar refresco)
+
+- **Causa encontrada**: el service worker (`public/sw.js`) usaba estrategia "caché
+  primero, red después" — una vez que el navegador guardaba una versión de la app, la
+  seguía mostrando siempre, sin importar que se subieran cambios nuevos, hasta forzar un
+  refresco manual (Ctrl+Shift+R). En el celular el problema era el mismo, pero ahí es
+  más difícil forzar el refresco, por eso quedaba pegado en la versión vieja.
+- **Corrección**: ahora es "red primero, caché como respaldo" (network-first). Mientras
+  haya señal, siempre pide la versión más nueva al servidor; el caché guardado solo se
+  usa si no hay conexión (que es justamente para lo que se agregó el modo offline).
+- Se subió la versión del caché (v1 → v2) para que, apenas se detecte el service worker
+  nuevo, se borre el caché viejo automáticamente.
+- **Una sola vez más** conviene hacer un refresco forzado después de subir este cambio
+  puntual (en el celular: borrar datos/caché del sitio desde la configuración del
+  navegador, o abrirlo en una pestaña nueva). De ahí en adelante, los próximos cambios
+  deberían reflejarse solos, sin necesitar Ctrl+Shift+R cada vez.

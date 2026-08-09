@@ -1,7 +1,13 @@
 // Service worker mínimo: cachea el "shell" de la app (HTML, CSS, JS, logo) para que
 // la interfaz cargue aunque no haya señal. Los datos de clima/sol-luna/Bortle siguen
 // necesitando conexión (no se pueden calcular offline), pero la app no queda en blanco.
-const CACHE_NAME = "astroturismo-cache-v1";
+//
+// IMPORTANTE: estrategia "red primero, caché como respaldo" (network-first). La versión
+// anterior usaba "caché primero", lo que hacía que el navegador siguiera mostrando una
+// versión vieja de la app indefinidamente, incluso después de subir cambios nuevos,
+// hasta que el usuario forzaba un refresco a mano. Con network-first, mientras haya
+// señal siempre se pide la versión más nueva; el caché solo se usa si no hay conexión.
+const CACHE_NAME = "astroturismo-cache-v2";
 const RUTAS_BASICAS = ["/", "/logo.png", "/manifest.json"];
 
 self.addEventListener("install", (event) => {
@@ -21,15 +27,12 @@ self.addEventListener("fetch", (event) => {
   if (event.request.url.includes("/api/")) return;
 
   event.respondWith(
-    caches.match(event.request).then((respuestaCache) => {
-      if (respuestaCache) return respuestaCache;
-      return fetch(event.request)
-        .then((respuestaRed) => {
-          const copia = respuestaRed.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copia));
-          return respuestaRed;
-        })
-        .catch(() => caches.match("/"));
-    })
+    fetch(event.request)
+      .then((respuestaRed) => {
+        const copia = respuestaRed.clone();
+        caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copia));
+        return respuestaRed;
+      })
+      .catch(() => caches.match(event.request).then((r) => r || caches.match("/")))
   );
 });
