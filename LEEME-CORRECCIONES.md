@@ -362,3 +362,33 @@ buena opción, con alta gratuita instantánea, sin trámite de aprobación manua
   ahora usan este ícono nuevo en vez del logo horizontal.
 - El logo horizontal (`public/logo.png`) sigue igual en el encabezado de la página, no
   se tocó nada ahí.
+
+# Decimoséptima pasada: bandera roja de seguridad + logo Astromet 2.0
+
+## Bandera roja de seguridad (prioridad absoluta sobre cualquier otra recomendación)
+- Nuevo `lib/seguridad.js`: evalúa condiciones de riesgo real para los turistas —
+  80% o más de probabilidad de lluvia/nieve, riesgo de tormenta eléctrica, nevada
+  significativa, viento peligroso (>15 m/s), o frío extremo combinado con viento
+  (riesgo de hipotermia). Es más conservador a propósito: mejor una alerta de más
+  que un accidente.
+- Se agregó el dato de "probabilidad de precipitación" (que antes no se pedía) a
+  ambas fuentes de clima (OpenWeather ya lo tenía disponible con el campo `pop`;
+  Open-Meteo se pidió explícitamente con `precipitation_probability`). También se
+  tradujeron los "weather codes" de Open-Meteo a las mismas categorías que usa
+  OpenWeather (Thunderstorm, Snow, etc.) para que la detección de tormenta/nevada
+  funcione igual sin importar qué fuente haya respondido.
+- **Cuando hay bandera roja, la IA NI SIQUIERA SE LLAMA**: se devuelve directamente
+  un mensaje fijo y predecible recomendando reprogramar, con los motivos exactos.
+  Para algo tan sensible como la seguridad, no quise depender de que un modelo de
+  lenguaje lo redacte bien cada vez.
+- Aparece un banner rojo bien visible arriba de los resultados cuando corresponde.
+- En el comparador de varias noches, las noches peligrosas se marcan con 🚩, muestran
+  el motivo en vez de las métricas normales, y quedan siempre al final del ranking.
+- En el PDF descargable, si hay bandera roja aparece un recuadro rojo arriba de todo
+  con el motivo, antes que cualquier otro dato.
+- Nueva tarjeta "Prob. de lluvia/nieve" en la sección de clima de los resultados.
+
+## Logo "Astromet 2.0"
+- Se agregó tu logo nuevo (`public/logo-astromet.png`) en el encabezado, debajo del
+  logo del Instituto y arriba del título, en la misma posición y proporción que
+  mostraste en la captura.

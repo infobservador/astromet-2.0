@@ -7,6 +7,7 @@ const colorPorNivel = {
   Excelente: "#8ee6a0",
   Buena: "#ffd27a",
   Regular: "#ffb4a2",
+  Peligro: "#ff4d4d",
 };
 
 export default function Comparador({ resultados, onElegirFecha }) {
@@ -17,13 +18,16 @@ export default function Comparador({ resultados, onElegirFecha }) {
   return (
     <div className="comparador-lista">
       {resultados.map((noche, i) => (
-        <div key={noche.fecha} className="comparador-fila">
-          <div className="comparador-puesto">#{i + 1}</div>
+        <div key={noche.fecha} className={`comparador-fila${noche.consejo.banderaRoja ? " comparador-fila-peligro" : ""}`}>
+          <div className="comparador-puesto">{noche.consejo.banderaRoja ? "🚩" : `#${i + 1}`}</div>
           <div className="comparador-info">
             <div className="comparador-fecha">{formatFechaLarga(noche.fecha)}</div>
             <div className="comparador-metricas">
-              {noche.promedio.temp.toFixed(0)}°C · {noche.promedio.clouds.toFixed(0)}% nubosidad ·{" "}
-              {noche.solLuna ? `${noche.solLuna.iluminacionLunarPorc}% luna` : "sin datos de luna"}
+              {noche.consejo.banderaRoja
+                ? `Se recomienda reprogramar: ${noche.consejo.motivosBanderaRoja.join(", ")}`
+                : `${noche.promedio.temp.toFixed(0)}°C · ${noche.promedio.clouds.toFixed(0)}% nubosidad · ${
+                    noche.solLuna ? `${noche.solLuna.iluminacionLunarPorc}% luna` : "sin datos de luna"
+                  }`}
             </div>
           </div>
           <div className="comparador-nivel" style={{ color: colorPorNivel[noche.consejo.nivel] || "inherit" }}>

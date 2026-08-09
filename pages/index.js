@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import Results from "../components/Results";
 import Comparador from "../components/Comparador";
 import { generarDescripcionNoche } from "../lib/descripcionNoche";
+import { evaluarBanderaRoja } from "../lib/seguridad";
 import { generarPdfReporte } from "../lib/generarPdf";
 
 const MapContainer = dynamic(() => import("react-leaflet").then((m) => m.MapContainer), { ssr: false });
@@ -96,7 +97,22 @@ function construirRangoFechaHora(fecha, desdeHora, hastaHora) {
   return { desde, hasta };
 }
 
-function generarConsejo(clima, bortle, iluminacionLunarPorc) {
+function generarConsejo(clima, bortle, iluminacionLunarPorc, bloques) {
+  // La seguridad tiene prioridad absoluta: si hay bandera roja, ni siquiera se
+  // calcula el puntaje normal, se marca directamente como "Peligro".
+  if (bloques) {
+    const { banderaRoja, motivos } = evaluarBanderaRoja(bloques);
+    if (banderaRoja) {
+      return {
+        nivel: "Peligro",
+        texto: `Se recomienda reprogramar: ${motivos.join(", ")}.`,
+        puntaje: -100,
+        banderaRoja: true,
+        motivosBanderaRoja: motivos,
+      };
+    }
+  }
+
   const razones = [];
   let puntaje = 0;
 
@@ -159,6 +175,8 @@ export default function Home() {
   const [advice, setAdvice] = useState(null);
   const [descripcionNoche, setDescripcionNoche] = useState(null);
   const [descripcionFuente, setDescripcionFuente] = useState(null);
+  const [banderaRoja, setBanderaRoja] = useState(false);
+  const [motivosBanderaRoja, setMotivosBanderaRoja] = useState([]);
   const [errorMsg, setErrorMsg] = useState("");
   const [loading, setLoading] = useState(false);
   const [panelInfo, setPanelInfo] = useState(null);
@@ -237,6 +255,8 @@ export default function Home() {
     setAdvice(null);
     setDescripcionNoche(null);
     setDescripcionFuente(null);
+    setBanderaRoja(false);
+    setMotivosBanderaRoja([]);
 
     const [weatherResult, solYLunaResult, bortleResult, lugarResult] = await Promise.allSettled([
       fetchJSON(`/api/weather?lat=${lat}&lon=${lng}&desde=${rango.desde.toISOString()}&hasta=${rango.hasta.toISOString()}`),
@@ -258,7 +278,7 @@ export default function Home() {
         bortle: bortleInfo.bortle,
         bortleComentario: bortleInfo.comentario,
       });
-      setAdvice(generarConsejo(promedio, bortleInfo.bortle, solLuna?.iluminacionLunarPorc));
+      setAdvice(generarConsejo(promedio, bortleInfo.bortle, solLuna?.iluminacionLunarPorc, bloques));
 
       // La descripción de la noche se genera en el servidor (con IA si está configurada,
       // si no con el generador local por reglas). Si ni siquiera se puede llamar al
@@ -271,9 +291,14 @@ export default function Home() {
         });
         setDescripcionNoche(respuesta.parrafos);
         setDescripcionFuente(respuesta.fuente);
+        setBanderaRoja(respuesta.banderaRoja || false);
+        setMotivosBanderaRoja(respuesta.motivosBanderaRoja || []);
       } catch {
+        const { banderaRoja: peligro, motivos } = evaluarBanderaRoja(bloques);
         setDescripcionNoche(generarDescripcionNoche(bloques, solLuna, bortleInfo, rango.desde));
         setDescripcionFuente("reglas");
+        setBanderaRoja(peligro);
+        setMotivosBanderaRoja(motivos);
       }
     } else {
       setErrorMsg(weatherResult.reason?.message || "No se pudo obtener el clima para este punto y horario.");
@@ -332,7 +357,7 @@ export default function Home() {
           fetchJSON(`/api/weather?lat=${coords.lat}&lon=${coords.lng}&desde=${rango.desde.toISOString()}&hasta=${rango.hasta.toISOString()}`),
           fetchJSON(`/api/solyluna?lat=${coords.lat}&lon=${coords.lng}&fecha=${rango.desde.toISOString()}`),
         ]);
-        const consejo = generarConsejo(weatherRes.promedio, bortleInfo.bortle, solLunaRes?.iluminacionLunarPorc);
+        const consejo = generarConsejo(weatherRes.promedio, bortleInfo.bortle, solLunaRes?.iluminacionLunarPorc, weatherRes.bloques);
         noches.push({ fecha: fechaISO, promedio: weatherRes.promedio, solLuna: solLunaRes, consejo });
       } catch {
         // Si una noche puntual falla (ej. fuera del rango de pronóstico), se salta esa sola.
@@ -356,7 +381,18 @@ export default function Home() {
 
   async function handleDescargarPdf() {
     if (!data) return;
-    await generarPdfReporte({ data, advice, descripcionNoche, lugarNombre, coords, fecha, desdeHora, hastaHora });
+    await generarPdfReporte({
+      data,
+      advice,
+      descripcionNoche,
+      lugarNombre,
+      coords,
+      fecha,
+      desdeHora,
+      hastaHora,
+      banderaRoja,
+      motivosBanderaRoja,
+    });
   }
 
   async function handleBuscar(e) {
@@ -393,6 +429,7 @@ export default function Home() {
     <div className="pagina" style={{ textAlign: "center" }} onClick={() => setPanelInfo(null)}>
       <header>
         <img src="/logo.png" alt="Logo Astroturismo" className="logo" />
+        <img src="/logo-astromet.png" alt="Astromet 2.0" className="logo-astromet" />
         <h1 className="titulo">Astroturismo Inteligente</h1>
         <p className="contacto">Contacto: info@astroturismo.com.ar</p>
         <nav className="nav-botones">
@@ -515,6 +552,15 @@ export default function Home() {
             ☆ Guardar
           </button>
         </p>
+      )}
+
+      {banderaRoja && data && (
+        <div className="bandera-roja" role="alert">
+          <div className="bandera-roja-titulo">🚩 Se recomienda reprogramar la excursión</div>
+          <div className="bandera-roja-motivos">
+            Condiciones de riesgo real para la seguridad de los turistas: {motivosBanderaRoja.join(", ")}.
+          </div>
+        </div>
       )}
 
       {data && (

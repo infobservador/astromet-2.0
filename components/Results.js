@@ -9,6 +9,7 @@ const colorPorNivel = {
   Excelente: "#8ee6a0",
   Buena: "#ffd27a",
   Regular: "#ffb4a2",
+  Peligro: "#ff4d4d",
 };
 
 // --- Iconos (SVG en línea, sin dependencias externas) ---
@@ -93,6 +94,17 @@ function IconoGota() {
   return (
     <IconoBase>
       <path d="M20 6c6 8 10 13 10 18a10 10 0 0 1-20 0c0-5 4-10 10-18Z" />
+    </IconoBase>
+  );
+}
+
+function IconoLluvia() {
+  return (
+    <IconoBase>
+      <path d="M11 20a7 7 0 0 1 1-14 9 9 0 0 1 17 3 6 6 0 0 1-1 11H11Z" />
+      <line x1="14" y1="26" x2="12" y2="33" />
+      <line x1="21" y1="26" x2="19" y2="33" />
+      <line x1="28" y1="26" x2="26" y2="33" />
     </IconoBase>
   );
 }
@@ -199,6 +211,9 @@ export default function Results({ data, advice, descripcionNoche, descripcionFue
         <Tarjeta icono={<IconoNube />} etiqueta="Nubosidad" valor={`${weather.clouds.toFixed(0)}%`} />
         <Tarjeta icono={<IconoGota />} etiqueta="Humedad" valor={`${weather.humidity.toFixed(0)}%`} />
         <Tarjeta icono={<IconoViento />} etiqueta="Viento" valor={`${weather.wind.toFixed(1)} m/s`} />
+        {weather.probPrecipitacion !== null && weather.probPrecipitacion !== undefined && (
+          <Tarjeta icono={<IconoLluvia />} etiqueta="Prob. de lluvia/nieve" valor={`${weather.probPrecipitacion.toFixed(0)}%`} />
+        )}
       </div>
 
       <h3>Contaminación lumínica</h3>

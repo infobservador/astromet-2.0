@@ -25,6 +25,7 @@ async function consultarOpenWeather(lat, lon, desdeMs, hastaMs) {
       humedad: item.main.humidity,
       viento: item.wind.speed,
       condicion: item.weather?.[0]?.main || null,
+      probabilidadPrecipitacion: item.pop !== undefined ? Math.round(item.pop * 100) : null,
       fuente: "OpenWeather",
     }));
 
@@ -34,7 +35,7 @@ async function consultarOpenWeather(lat, lon, desdeMs, hastaMs) {
 async function consultarOpenMeteo(lat, lon, desdeMs, hastaMs) {
   const r = await fetch(
     `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}` +
-      `&hourly=temperature_2m,cloudcover,relative_humidity_2m,wind_speed_10m` +
+      `&hourly=temperature_2m,cloudcover,relative_humidity_2m,wind_speed_10m,precipitation_probability,weathercode` +
       `&wind_speed_unit=ms&timezone=UTC&forecast_days=16`
   );
   if (!r.ok) throw new Error(`Open-Meteo respondió ${r.status}`);
@@ -51,7 +52,8 @@ async function consultarOpenMeteo(lat, lon, desdeMs, hastaMs) {
         nubosidad: data.hourly.cloudcover[i],
         humedad: data.hourly.relative_humidity_2m[i],
         viento: data.hourly.wind_speed_10m[i],
-        condicion: null,
+        condicion: mapearCodigoClimaOpenMeteo(data.hourly.weathercode?.[i]),
+        probabilidadPrecipitacion: data.hourly.precipitation_probability?.[i] ?? null,
         fuente: "Open-Meteo",
       });
     }
@@ -60,8 +62,24 @@ async function consultarOpenMeteo(lat, lon, desdeMs, hastaMs) {
   return bloques.length > 0 ? bloques : null;
 }
 
+// Traduce el "weather code" de Open-Meteo (estándar WMO) a las mismas categorías
+// simples que usa OpenWeather ("Thunderstorm", "Snow", etc.), para que el resto de
+// la app (detección de tormenta/nevada) funcione igual sin importar qué fuente
+// haya respondido.
+function mapearCodigoClimaOpenMeteo(codigo) {
+  if (codigo === undefined || codigo === null) return null;
+  if (codigo >= 95) return "Thunderstorm";
+  if (codigo >= 71 && codigo <= 77) return "Snow";
+  if (codigo >= 85 && codigo <= 86) return "Snow";
+  if (codigo >= 51 && codigo <= 67) return "Rain";
+  if (codigo >= 80 && codigo <= 82) return "Rain";
+  if (codigo >= 45 && codigo <= 48) return "Fog";
+  if (codigo <= 3) return "Clear";
+  return null;
+}
+
 function promediar(bloques) {
-  return bloques.reduce(
+  const base = bloques.reduce(
     (acc, b) => ({
       temp: acc.temp + b.temperatura / bloques.length,
       clouds: acc.clouds + b.nubosidad / bloques.length,
@@ -70,6 +88,16 @@ function promediar(bloques) {
     }),
     { temp: 0, clouds: 0, humidity: 0, wind: 0 }
   );
+
+  const conProbabilidad = bloques.filter(
+    (b) => b.probabilidadPrecipitacion !== null && b.probabilidadPrecipitacion !== undefined
+  );
+  base.probPrecipitacion =
+    conProbabilidad.length > 0
+      ? conProbabilidad.reduce((sum, b) => sum + b.probabilidadPrecipitacion, 0) / conProbabilidad.length
+      : null;
+
+  return base;
 }
 
 export default async function handler(req, res) {
@@ -138,6 +166,10 @@ export default async function handler(req, res) {
     clouds: promedios.reduce((a, p) => a + p.clouds, 0) / promedios.length,
     humidity: promedios.reduce((a, p) => a + p.humidity, 0) / promedios.length,
     wind: promedios.reduce((a, p) => a + p.wind, 0) / promedios.length,
+    probPrecipitacion: (() => {
+      const conDato = promedios.filter((p) => p.probPrecipitacion !== null);
+      return conDato.length > 0 ? conDato.reduce((a, p) => a + p.probPrecipitacion, 0) / conDato.length : null;
+    })(),
   };
 
   // Para detectar tramos horarios (nubosidad por franja) usamos los bloques con

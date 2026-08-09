@@ -8,6 +8,7 @@
 // para que la app nunca se rompa por esto.
 
 import { generarDescripcionNoche } from "../../lib/descripcionNoche";
+import { evaluarBanderaRoja } from "../../lib/seguridad";
 
 function armarPrompt({ lugarNombre, fecha, desdeHora, hastaHora, bloques, solLuna, bortleInfo }) {
   const resumenBloques = bloques
@@ -70,6 +71,21 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: "Faltan datos de clima para generar la descripción." });
   }
 
+  // La seguridad va primero y es determinística: si hay condiciones de riesgo real,
+  // ni siquiera se llama a la IA — se devuelve directamente un mensaje fijo, para no
+  // depender de que un modelo de lenguaje redacte bien algo tan sensible cada vez.
+  const { banderaRoja, motivos } = evaluarBanderaRoja(bloques);
+  if (banderaRoja) {
+    return res.status(200).json({
+      parrafos: [
+        `Se recomienda REPROGRAMAR la excursión para otro día. Se detectaron condiciones de riesgo real para la seguridad de los turistas: ${motivos.join(", ")}. La prioridad es la seguridad del grupo, por encima de cualquier actividad alternativa.`,
+      ],
+      fuente: "seguridad",
+      banderaRoja: true,
+      motivosBanderaRoja: motivos,
+    });
+  }
+
   const apiKey = process.env.ANTHROPIC_API_KEY;
 
   if (apiKey) {
@@ -104,7 +120,7 @@ export default async function handler(req, res) {
         .map((p) => p.replace(/^#+\s*/, "").replace(/\*\*/g, ""))
         .filter((p) => p.length > 0);
 
-      return res.status(200).json({ parrafos, fuente: "ia" });
+      return res.status(200).json({ parrafos, fuente: "ia", banderaRoja: false });
     } catch (err) {
       console.error("Error generando descripción con IA, se usa el generador por reglas:", err.message);
       // Sigue de largo al respaldo por reglas.
@@ -116,5 +132,5 @@ export default async function handler(req, res) {
   const inicioVentana =
     fecha && !isNaN(desdeH) ? new Date(`${fecha}T${String(desdeH).padStart(2, "0")}:00:00`) : new Date();
   const parrafos = generarDescripcionNoche(bloques, solLuna, bortleInfo, inicioVentana);
-  res.status(200).json({ parrafos, fuente: "reglas" });
+  res.status(200).json({ parrafos, fuente: "reglas", banderaRoja: false });
 }
