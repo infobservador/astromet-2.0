@@ -392,3 +392,13 @@ buena opción, con alta gratuita instantánea, sin trámite de aprobación manua
 - Se agregó tu logo nuevo (`public/logo-astromet.png`) en el encabezado, debajo del
   logo del Instituto y arriba del título, en la misma posición y proporción que
   mostraste en la captura.
+
+# Decimoctava pasada: logo Astromet sin "2.0"
+
+- Se sacó el "2.0" del logo visible (`public/logo-astromet.png`), ya que para uso
+  comercial de cara al cliente el "2.0" podía leerse como "todavía en desarrollo".
+  El nombre interno del proyecto/repo sigue siendo "astromet-2.0", solo cambió la
+  marca visible en la app.
+- Se editó el archivo de imagen directamente (no se volvió a generar desde cero):
+  el "2.0" estaba separado del trazo del swoosh naranja sin tocarlo, así que se pudo
+  borrar limpio sin dejar cortes ni artefactos en el resto del diseño.
