@@ -447,3 +447,10 @@ buena opción, con alta gratuita instantánea, sin trámite de aprobación manua
 - No hay registro autoservicio para operadores nuevos — los creás vos.
 - Esto es intencional: la idea de la Fase 1 es probar el sistema de créditos con tu
   gente real antes de meter cobro automático (Fase 2) y alta autoservicio (Fase 3).
+
+# Vigésima pasada: tolerancia a espacios en las claves de Upstash
+
+- `lib/creditos.js` ahora recorta (`.trim()`) los valores de `UPSTASH_REDIS_REST_URL` y
+  `UPSTASH_REDIS_REST_TOKEN` antes de usarlos, para que un espacio de más al copiar/
+  pegar la clave en Vercel no rompa la conexión con un error confuso (esto fue lo que
+  pasó: quedó un espacio antes de "https://" al pegar la URL).
