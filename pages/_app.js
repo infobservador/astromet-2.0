@@ -17,7 +17,9 @@ export default function MyApp({ Component, pageProps }) {
       <Head>
         <link rel="manifest" href="/manifest.json" />
         <meta name="theme-color" content="#0b1d3a" />
-        <link rel="icon" href="/logo.png" />
+        <link rel="icon" href="/favicon-32.png" sizes="32x32" type="image/png" />
+        <link rel="icon" href="/icon-192.png" sizes="192x192" type="image/png" />
+        <link rel="apple-touch-icon" href="/icon-180.png" />
       </Head>
       <Component {...pageProps} />
     </>

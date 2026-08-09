@@ -1,6 +1,6 @@
 {
   "name": "Astroturismo Inteligente",
-  "short_name": "Astroturismo",
+  "short_name": "Astromet",
   "description": "Clima, sol/luna y contaminación lumínica para planificar astroturismo.",
   "start_url": "/",
   "display": "standalone",
@@ -8,10 +8,22 @@
   "theme_color": "#0b1d3a",
   "icons": [
     {
-      "src": "/logo.png",
-      "sizes": "1343x341",
+      "src": "/icon-192.png",
+      "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
     }
   ]
 }

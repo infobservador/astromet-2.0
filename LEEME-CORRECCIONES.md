@@ -348,3 +348,17 @@ buena opción, con alta gratuita instantánea, sin trámite de aprobación manua
   puntual (en el celular: borrar datos/caché del sitio desde la configuración del
   navegador, o abrirlo en una pestaña nueva). De ahí en adelante, los próximos cambios
   deberían reflejarse solos, sin necesitar Ctrl+Shift+R cada vez.
+
+# Decimosexta pasada: ícono propio "Astromet" (favicon + PWA)
+
+- Se diseñó un ícono cuadrado nuevo (`public/icon-192.png`, `icon-512.png`,
+  `icon-180.png`, `favicon-32.png`), un planeta naranja con anillo celeste, retomando
+  el mismo motivo visual de tu logo del Instituto, pero en formato cuadrado — el logo
+  horizontal completo no se leía bien achicado a un ícono de pestaña o de celular.
+- `public/manifest.json` actualizado con los tamaños correctos de ícono (antes tenía
+  mal declarado el tamaño del logo horizontal, 1343x341, que no es válido para un ícono
+  de app instalable).
+- `pages/_app.js`: la pestaña del navegador y el ícono al instalar la app en el celular
+  ahora usan este ícono nuevo en vez del logo horizontal.
+- El logo horizontal (`public/logo.png`) sigue igual en el encabezado de la página, no
+  se tocó nada ahí.

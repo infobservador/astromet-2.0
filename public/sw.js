@@ -8,7 +8,7 @@
 // hasta que el usuario forzaba un refresco a mano. Con network-first, mientras haya
 // señal siempre se pide la versión más nueva; el caché solo se usa si no hay conexión.
 const CACHE_NAME = "astroturismo-cache-v2";
-const RUTAS_BASICAS = ["/", "/logo.png", "/manifest.json"];
+const RUTAS_BASICAS = ["/", "/logo.png", "/manifest.json", "/icon-192.png", "/icon-512.png"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(RUTAS_BASICAS)));
