@@ -492,3 +492,24 @@ buena opción, con alta gratuita instantánea, sin trámite de aprobación manua
   por reglas, sin romper la app.
 - **Aviso visible en la app**: un cartel naranja avisa la fecha exacta hasta la que la
   IA es gratis sin código, así nadie se sorprende cuando después haga falta uno.
+
+# Vigésimo cuarta pasada: verificación real de precisión del pronóstico
+
+- Nueva sección **"Verificación de pronóstico"** dentro de `/admin`, debajo de la tabla
+  de operadores. Compara lo que Open-Meteo predecía 1, 2, 3 y 5 días antes contra lo
+  que realmente pasó, usando su **Previous Runs API** (datos reales de archivo, sin
+  clave, sin inventar nada).
+- Para cada variable (temperatura, nubosidad, viento, precipitación) y cada
+  anticipación, muestra:
+  - **Error medio**: en promedio, cuánto se equivocó el pronóstico.
+  - **Sesgo**: si tiende a sobreestimar (+) o subestimar (-) sistemáticamente.
+- **Limitación importante, avisada en la propia pantalla**: esto verifica Open-Meteo,
+  una de las dos fuentes que combina la app. OpenWeather no tiene un archivo público
+  gratuito de pronósticos pasados, así que no se puede auditar de la misma manera con
+  datos reales — solo se puede confiar en su reputación general como servicio.
+- Sobre corregir sesgos: si al usar esta herramienta aparece un sesgo grande y
+  consistente (por ejemplo, "la nubosidad a 3 días siempre se sobreestima en 15
+  puntos"), se puede agregar una corrección numérica en `pages/api/weather.js` para
+  compensarlo. No se agregó ninguna corrección automática todavía: primero hay que
+  juntar resultados reales con esta herramienta antes de decidir si hace falta y de
+  cuánto.
