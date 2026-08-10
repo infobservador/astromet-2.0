@@ -9,7 +9,8 @@
 
 import { generarDescripcionNoche } from "../../lib/descripcionNoche";
 import { evaluarBanderaRoja } from "../../lib/seguridad";
-import { obtenerOperador, descontarCredito } from "../../lib/creditos";
+import { obtenerOperador, descontarCredito, permitidoPorTopeDiarioPromo } from "../../lib/creditos";
+import { estaEnPeriodoDePrueba } from "../../lib/promocion";
 
 function armarPrompt({ lugarNombre, fecha, desdeHora, hastaHora, bloques, solLuna, bortleInfo }) {
   const resumenBloques = bloques
@@ -90,16 +91,20 @@ export default async function handler(req, res) {
   const apiKey = process.env.ANTHROPIC_API_KEY;
 
   // Sistema de créditos: si se manda un código de operador, el uso de IA requiere
-  // saldo disponible y se descuenta 1 crédito SOLO si la generación fue exitosa. Si NO
-  // se manda código (uso interno/administrador), la IA se usa libremente mientras haya
-  // ANTHROPIC_API_KEY configurada — así el sistema de créditos es una capa opcional
-  // para operadores externos, sin romper el uso interno que ya existía.
+  // saldo disponible y se descuenta 1 crédito SOLO si la generación fue exitosa.
+  //
+  // Si NO se manda código: solo se permite durante el período de lanzamiento gratis
+  // (ver lib/promocion.js), y con un tope diario de seguridad para evitar un costo
+  // inesperado por uso masivo/scraping. Pasada la fecha de la promo, usar la IA sin
+  // código deja de estar permitido — hace falta un código con crédito.
   let operadorInfo = null;
-  let puedeUsarIA = !!apiKey;
+  let puedeUsarIA = false;
 
   if (apiKey && codigoOperador) {
     operadorInfo = await obtenerOperador(codigoOperador);
     puedeUsarIA = !!operadorInfo && operadorInfo.creditos > 0;
+  } else if (apiKey && !codigoOperador && estaEnPeriodoDePrueba()) {
+    puedeUsarIA = await permitidoPorTopeDiarioPromo();
   }
 
   if (puedeUsarIA) {
@@ -141,7 +146,13 @@ export default async function handler(req, res) {
         creditosRestantes = actualizado ? actualizado.creditos : creditosRestantes;
       }
 
-      return res.status(200).json({ parrafos, fuente: "ia", banderaRoja: false, creditosRestantes });
+      return res.status(200).json({
+        parrafos,
+        fuente: "ia",
+        banderaRoja: false,
+        creditosRestantes,
+        enPromo: !codigoOperador,
+      });
     } catch (err) {
       console.error("Error generando descripción con IA, se usa el generador por reglas:", err.message);
       // No se descontó crédito (la generación falló). Sigue de largo al respaldo por reglas.

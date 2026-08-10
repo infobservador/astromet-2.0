@@ -571,3 +571,15 @@ body {
   font-size: 0.8rem;
   font-weight: bold;
 }
+
+.aviso-promo {
+  max-width: 480px;
+  margin: 0 auto 16px;
+  background-color: rgba(255, 122, 41, 0.12);
+  border: 1px solid var(--naranja);
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 0.8rem;
+  color: var(--texto-claro);
+  text-align: left;
+}

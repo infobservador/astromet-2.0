@@ -472,3 +472,23 @@ buena opción, con alta gratuita instantánea, sin trámite de aprobación manua
   operadores al servidor** — por eso se veía "Todavía no hay operadores creados" aunque
   los datos seguían perfectamente en la base de datos. Ahora, al recuperar la clave
   guardada, también se vuelve a cargar la lista real.
+
+# Vigésimo tercera pasada: período de lanzamiento gratis con fecha de corte
+
+- **Antes**: sin código de operador, la IA se usaba libre e ilimitadamente para
+  cualquier visitante (pagado de tu cuenta de Anthropic). Eso ya no correspondía una
+  vez que la app quedó pública.
+- **Ahora** (`lib/promocion.js`): la IA sin código solo funciona hasta una fecha límite
+  configurable (por defecto, fin de agosto 2026 — cambiala editando esa fecha en el
+  archivo si querés otra). Pasada esa fecha, usar la IA requiere sí o sí un código de
+  operador con crédito; el resto de la app (mapa, clima, sol/luna, Bortle, comparador,
+  PDF, favoritos, y el generador de descripción POR REGLAS) sigue siendo gratis para
+  siempre, con o sin código.
+- **Tope diario de seguridad** (`lib/creditos.js`, `permitidoPorTopeDiarioPromo`):
+  mientras dure la promo gratis, se cuentan los usos sin código por día (usando la
+  misma base de datos ya conectada) y se corta en 200 usos/día (~$0.40-0.50 de costo
+  máximo por día, para evitar una factura sorpresa si alguien hace scraping o abuso
+  durante el lanzamiento). Al llegar al tope, cae automáticamente al generador gratis
+  por reglas, sin romper la app.
+- **Aviso visible en la app**: un cartel naranja avisa la fecha exacta hasta la que la
+  IA es gratis sin código, así nadie se sorprende cuando después haga falta uno.

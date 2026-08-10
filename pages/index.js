@@ -4,6 +4,7 @@ import Results from "../components/Results";
 import Comparador from "../components/Comparador";
 import { generarDescripcionNoche } from "../lib/descripcionNoche";
 import { evaluarBanderaRoja } from "../lib/seguridad";
+import { estaEnPeriodoDePrueba, fechaFinPromoLegible } from "../lib/promocion";
 import { generarPdfReporte } from "../lib/generarPdf";
 
 const MapContainer = dynamic(() => import("react-leaflet").then((m) => m.MapContainer), { ssr: false });
@@ -510,11 +511,18 @@ export default function Home() {
             type="text"
             value={codigoOperador}
             onChange={(e) => handleGuardarCodigoOperador(e.target.value.trim())}
-            placeholder="Dejalo vacío si sos vos mismo probando la app"
+            placeholder="No hace falta durante la promo de lanzamiento"
           />
         </label>
         {creditosRestantes !== null && <span className="creditos-restantes">Créditos disponibles: {creditosRestantes}</span>}
       </div>
+
+      {estaEnPeriodoDePrueba() && (
+        <p className="aviso-promo">
+          🎁 Lanzamiento: la descripción de la noche generada con IA es gratis para todos hasta el {fechaFinPromoLegible()}.
+          Después de esa fecha vas a necesitar un código de operador con crédito (el resto de la app sigue siendo gratis siempre).
+        </p>
+      )}
 
       {favoritos.length > 0 && (
         <div className="favoritos" onClick={(e) => e.stopPropagation()}>
