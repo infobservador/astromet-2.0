@@ -11,6 +11,7 @@ import { generarDescripcionNoche } from "../../lib/descripcionNoche";
 import { evaluarBanderaRoja } from "../../lib/seguridad";
 import { obtenerOperador, descontarCredito, permitidoPorTopeDiarioPromo } from "../../lib/creditos";
 import { estaEnPeriodoDePrueba } from "../../lib/promocion";
+import { notaConfianza } from "../../lib/confianzaPronostico";
 
 function armarPrompt({ lugarNombre, fecha, desdeHora, hastaHora, bloques, solLuna, bortleInfo }) {
   const resumenBloques = bloques
@@ -72,6 +73,11 @@ export default async function handler(req, res) {
   if (!Array.isArray(bloques) || bloques.length === 0) {
     return res.status(400).json({ error: "Faltan datos de clima para generar la descripción." });
   }
+
+  const desdeHoraNum = parseInt(desdeHora, 10);
+  const inicioVentana =
+    fecha && !isNaN(desdeHoraNum) ? new Date(`${fecha}T${String(desdeHoraNum).padStart(2, "0")}:00:00`) : new Date();
+  const nota = notaConfianza(inicioVentana);
 
   // La seguridad va primero y es determinística: si hay condiciones de riesgo real,
   // ni siquiera se llama a la IA — se devuelve directamente un mensaje fijo, para no
@@ -139,6 +145,8 @@ export default async function handler(req, res) {
         .map((p) => p.replace(/^#+\s*/, "").replace(/\*\*/g, ""))
         .filter((p) => p.length > 0);
 
+      if (nota) parrafos.push(nota);
+
       // Recién acá, con la generación ya lista, se descuenta el crédito.
       let creditosRestantes = operadorInfo ? operadorInfo.creditos : null;
       if (codigoOperador && operadorInfo) {
@@ -160,9 +168,7 @@ export default async function handler(req, res) {
   }
 
   // Respaldo: generador local por reglas (sin costo, sin IA).
-  const desdeH = parseInt(desdeHora, 10);
-  const inicioVentana =
-    fecha && !isNaN(desdeH) ? new Date(`${fecha}T${String(desdeH).padStart(2, "0")}:00:00`) : new Date();
+  // (notaConfianza ya se agrega adentro de generarDescripcionNoche)
   const parrafos = generarDescripcionNoche(bloques, solLuna, bortleInfo, inicioVentana);
   res.status(200).json({
     parrafos,

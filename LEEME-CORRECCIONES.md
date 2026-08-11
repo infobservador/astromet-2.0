@@ -513,3 +513,24 @@ buena opción, con alta gratuita instantánea, sin trámite de aprobación manua
   compensarlo. No se agregó ninguna corrección automática todavía: primero hay que
   juntar resultados reales con esta herramienta antes de decidir si hace falta y de
   cuánto.
+
+# Vigésimo quinta pasada: nota de confianza según anticipación + bug de fecha UTC
+
+## Nota de confianza (a partir de la verificación real con datos)
+- A partir de las pruebas reales que hicimos en `/admin` (Buenos Aires vs. Patagonia),
+  se confirmó que el sesgo de la nubosidad no es consistente entre regiones — en
+  Buenos Aires subestima, en Patagonia sobreestima. Como no hay un patrón único
+  corregible con los datos disponibles, se agregó `lib/confianzaPronostico.js`, que
+  suma una nota de confiabilidad reducida cuando la consulta es a más de 3 días de
+  anticipación (en vez de "corregir" con datos insuficientes, se avisa la limitación
+  real). Se aplica tanto si la descripción la generó la IA como el generador por
+  reglas.
+
+## Bug corregido: no dejaba elegir la fecha de "hoy" de noche
+- `hoyISO()` y `maxFechaISO()` (en `pages/index.js`) usaban `toISOString()`, que
+  siempre da la fecha en UTC. Como Argentina está 3 horas atrás de UTC, después de
+  aproximadamente las 21:00 hs locales, para esas funciones ya era "el día siguiente"
+  en UTC — el selector de fecha rechazaba elegir el día de hoy (real, local) pensando
+  que ya había pasado. Se corrigió para que use los componentes de fecha LOCALES del
+  navegador en vez de UTC. La validación del rango horario (`construirRangoFechaHora`)
+  no tenía este problema — solo afectaba a estas dos funciones de visualización.

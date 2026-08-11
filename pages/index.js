@@ -158,14 +158,22 @@ function generarConsejo(clima, bortle, iluminacionLunarPorc, bloques) {
   };
 }
 
+// Usa los componentes de fecha LOCALES del navegador, no UTC — toISOString() siempre
+// da la fecha en UTC, lo que hacía que de noche en Argentina (UTC-3) la app pensara
+// que ya era "mañana" y rechazara elegir el día de hoy en el selector de fecha.
+function formatearFechaLocal(d) {
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
 function hoyISO() {
-  const d = new Date();
-  return d.toISOString().slice(0, 10);
+  return formatearFechaLocal(new Date());
 }
 
 function maxFechaISO() {
-  const d = new Date(Date.now() + 15 * 24 * 60 * 60 * 1000);
-  return d.toISOString().slice(0, 10);
+  return formatearFechaLocal(new Date(Date.now() + 15 * 24 * 60 * 60 * 1000));
 }
 
 export default function Home() {
