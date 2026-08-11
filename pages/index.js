@@ -615,6 +615,17 @@ export default function Home() {
         </p>
       )}
 
+      {favoritos.length > 0 && (
+        <div className="favoritos-cerca" onClick={(e) => e.stopPropagation()}>
+          <span className="favoritos-etiqueta">Tus lugares guardados:</span>
+          {favoritos.map((f, i) => (
+            <button key={i} type="button" className="favorito-chip-cerca" onClick={() => usarFavorito(f)}>
+              📍 {f.nombre}
+            </button>
+          ))}
+        </div>
+      )}
+
       {banderaRoja && data && (
         <div className="bandera-roja" role="alert">
           <div className="bandera-roja-titulo">🚩 Se recomienda reprogramar la excursión</div>

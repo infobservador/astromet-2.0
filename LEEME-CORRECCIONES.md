@@ -553,3 +553,12 @@ buena opción, con alta gratuita instantánea, sin trámite de aprobación manua
 - Ahora: durante la promo, si el código no tiene saldo (o no existe), la app igual
   permite la IA gratis, exactamente igual que si el campo estuviera vacío. Nadie queda
   afuera de la promo por tener un código de prueba viejo guardado.
+
+# Vigésimo séptima pasada: favoritos también visibles cerca del mapa
+
+- Se agregó una segunda lista de favoritos ("Tus lugares guardados"), esta vez
+  ubicada justo debajo del mapa (donde ya estás mirando después de elegir una
+  ubicación), además de la que ya existía arriba cerca del buscador. Es la misma
+  lista, mostrada en dos lugares para que sea fácil de encontrar sin scrollear.
+- Cada favorito es un botón: un clic carga esa ubicación al instante y recalcula
+  todo (clima, sol/luna, Bortle, descripción) para ese lugar guardado.

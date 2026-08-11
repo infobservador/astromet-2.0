@@ -590,3 +590,29 @@ body {
   color: var(--texto-claro);
   text-align: left;
 }
+
+/* --- Favoritos cerca del mapa (acceso rápido) --- */
+.favoritos-cerca {
+  max-width: 640px;
+  margin: 12px auto;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.favorito-chip-cerca {
+  background-color: var(--azul-claro);
+  color: var(--texto-claro);
+  border: 1px solid var(--naranja);
+  border-radius: 16px;
+  padding: 6px 12px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.favorito-chip-cerca:hover {
+  background-color: var(--naranja);
+  color: #1a1200;
+}
