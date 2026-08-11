@@ -108,7 +108,14 @@ export default async function handler(req, res) {
 
   if (apiKey && codigoOperador) {
     operadorInfo = await obtenerOperador(codigoOperador);
-    puedeUsarIA = !!operadorInfo && operadorInfo.creditos > 0;
+    if (operadorInfo && operadorInfo.creditos > 0) {
+      puedeUsarIA = true;
+    } else if (estaEnPeriodoDePrueba()) {
+      // Durante la promo de lanzamiento, aunque el código no tenga saldo (o no
+      // exista), se sigue permitiendo gratis igual que a quien no puso ningún código
+      // — nadie debería quedar afuera por tener un código viejo cargado en el navegador.
+      puedeUsarIA = await permitidoPorTopeDiarioPromo();
+    }
   } else if (apiKey && !codigoOperador && estaEnPeriodoDePrueba()) {
     puedeUsarIA = await permitidoPorTopeDiarioPromo();
   }

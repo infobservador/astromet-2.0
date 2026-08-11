@@ -534,3 +534,22 @@ buena opción, con alta gratuita instantánea, sin trámite de aprobación manua
   que ya había pasado. Se corrigió para que use los componentes de fecha LOCALES del
   navegador en vez de UTC. La validación del rango horario (`construirRangoFechaHora`)
   no tenía este problema — solo afectaba a estas dos funciones de visualización.
+
+# Vigésimo sexta pasada: favoritos con confirmación visual + promo más tolerante
+
+## Favoritos: faltaba confirmación visual (no era un bug de guardado)
+- El botón "☆ Guardar" sí guardaba correctamente en `localStorage`, pero no daba
+  ninguna confirmación visual en el momento, y la lista de favoritos aparece arriba
+  de todo (cerca del buscador), lejos del botón (que está abajo, cerca de los
+  resultados) — fácil de pensar que no funcionó sin haber scrolleado para arriba.
+- Ahora el botón cambia a "★ Guardado" (y se deshabilita) apenas se guarda esa
+  ubicación, dando confirmación inmediata en el mismo lugar donde se hizo clic.
+
+## Promo más tolerante a códigos de operador viejos sin saldo
+- Antes: si alguien tenía un código de operador cargado en su navegador (de una prueba
+  anterior) y ese código se quedó sin créditos, la app usaba el generador por reglas
+  para esa persona, aunque estuviéramos en pleno período de promo gratis — daba la
+  sensación de que "no le funciona igual que a los demás".
+- Ahora: durante la promo, si el código no tiene saldo (o no existe), la app igual
+  permite la IA gratis, exactamente igual que si el campo estuviera vacío. Nadie queda
+  afuera de la promo por tener un código de prueba viejo guardado.

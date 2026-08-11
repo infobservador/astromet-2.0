@@ -244,6 +244,9 @@ export default function Home() {
     guardarFavoritos([...favoritos, { nombre, lat: coords.lat, lng: coords.lng }]);
   }
 
+  const esFavoritoActual =
+    coords && favoritos.some((f) => Math.abs(f.lat - coords.lat) < 0.0001 && Math.abs(f.lng - coords.lng) < 0.0001);
+
   function eliminarFavorito(i) {
     guardarFavoritos(favoritos.filter((_, idx) => idx !== i));
   }
@@ -601,8 +604,13 @@ export default function Home() {
         <p className="coordenadas">
           Ubicación seleccionada: {lugarNombre ? <strong>{lugarNombre}</strong> : "nombre no disponible"} (
           {coords.lat.toFixed(4)}, {coords.lng.toFixed(4)})
-          <button className="boton-favorito" onClick={agregarFavorito} title="Guardar como favorito">
-            ☆ Guardar
+          <button
+            className="boton-favorito"
+            onClick={agregarFavorito}
+            disabled={esFavoritoActual}
+            title={esFavoritoActual ? "Ya está guardado en favoritos" : "Guardar como favorito"}
+          >
+            {esFavoritoActual ? "★ Guardado" : "☆ Guardar"}
           </button>
         </p>
       )}

@@ -425,6 +425,13 @@ body {
   font-family: inherit;
 }
 
+.boton-favorito:disabled {
+  background-color: var(--naranja);
+  color: #1a1200;
+  cursor: default;
+  opacity: 1;
+}
+
 /* --- Acciones sobre el resultado (PDF) --- */
 .acciones-resultado {
   margin: 12px 0;
