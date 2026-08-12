@@ -24,7 +24,7 @@ function armarPrompt({ lugarNombre, fecha, desdeHora, hastaHora, bloques, solLun
   const lineasEventos = [];
   for (const l of eventosCelestes?.lluviasMeteoros || []) {
     lineasEventos.push(
-      `- Lluvia de meteoros "${l.nombre}"${l.esPico ? " (HOY ES EL PICO)" : " (activa, no es el pico exacto)"}, visibilidad desde el hemisferio sur: ${l.visibilidadSur}.`
+      `- Lluvia de meteoros "${l.nombre}"${l.esPico ? " (HOY ES EL PICO)" : " (activa, no es el pico exacto)"}, calidad de visibilidad desde esta latitud: ${l.calidadVisibilidad} (el radiante alcanza hasta ${l.alturaMaximaGrados}° de altura en el cielo).`
     );
   }
   for (const c of eventosCelestes?.conjunciones || []) {

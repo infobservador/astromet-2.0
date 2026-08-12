@@ -226,7 +226,7 @@ export default function Results({ data, advice, descripcionNoche, descripcionFue
               {data.eventosCelestes.lluviasMeteoros?.map((l, i) => (
                 <li key={`lluvia-${i}`}>
                   🌠 Lluvia de meteoros <strong>{l.nombre}</strong>
-                  {l.esPico ? " — ¡hoy es el pico!" : " (activa)"} · visibilidad desde el sur: {l.visibilidadSur}
+                  {l.esPico ? " — ¡hoy es el pico!" : " (activa)"} · visibilidad desde esta latitud: {l.calidadVisibilidad} (hasta {l.alturaMaximaGrados}° de altura)
                 </li>
               ))}
               {data.eventosCelestes.conjunciones?.map((c, i) => (

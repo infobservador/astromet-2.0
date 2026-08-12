@@ -597,3 +597,21 @@ buena opción, con alta gratuita instantánea, sin trámite de aprobación manua
   vacía (sigue prohibido inventar).
 - Se muestran en una tarjeta nueva "Eventos celestes" en los resultados (solo aparece
   si hay algo real que mostrar) y en el PDF descargable.
+
+# Trigésima pasada: lluvias de meteoros calculadas para cualquier latitud del mundo
+
+- Antes, cada lluvia de meteoros tenía una etiqueta fija de "visibilidad desde el sur"
+  (alta/media/baja) — funcionaba para Argentina, pero estaba mal para cualquiera que
+  usara la app desde el hemisferio norte (les diría "baja" a las Perseidas, que ahí
+  son excelentes).
+- Ahora se calcula la **altura máxima real que alcanza el radiante de cada lluvia en
+  el cielo**, usando la latitud exacta del lugar consultado y la declinación
+  aproximada del radiante (fórmula estándar de astronomía esférica: altura máxima =
+  90° − |latitud − declinación|). Funciona correctamente para cualquier punto del
+  mundo, no solo el hemisferio sur.
+- Probado con un caso real cruzado: las Perseidas (pico 12 de agosto) dan "no visible"
+  desde Buenos Aires, "alta" desde Madrid, y "media" desde Quito (en el medio) — la
+  simetría esperada entre hemisferios.
+- Conjunciones y eclipses ya funcionaban correctamente para cualquier lugar del mundo
+  desde que se agregaron (usan la latitud/longitud real de la consulta para calcular
+  la posición de los astros), no hizo falta tocarlos.
