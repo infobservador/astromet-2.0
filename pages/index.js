@@ -236,12 +236,21 @@ export default function Home() {
     }
   }
 
+  const MAX_FAVORITOS = 12;
+
   function agregarFavorito() {
     if (!coords) return;
     const nombre = lugarNombre || `${coords.lat.toFixed(4)}, ${coords.lng.toFixed(4)}`;
     const yaExiste = favoritos.some((f) => Math.abs(f.lat - coords.lat) < 0.0001 && Math.abs(f.lng - coords.lng) < 0.0001);
     if (yaExiste) return;
-    guardarFavoritos([...favoritos, { nombre, lat: coords.lat, lng: coords.lng }]);
+
+    let listaNueva = [...favoritos, { nombre, lat: coords.lat, lng: coords.lng }];
+    // Si se llega al límite, se borra el más antiguo (el primero de la lista) para
+    // hacer lugar al nuevo, así nunca hace falta borrar nada a mano ni la lista crece sin fin.
+    if (listaNueva.length > MAX_FAVORITOS) {
+      listaNueva = listaNueva.slice(listaNueva.length - MAX_FAVORITOS);
+    }
+    guardarFavoritos(listaNueva);
   }
 
   const esFavoritoActual =
@@ -535,22 +544,6 @@ export default function Home() {
         </p>
       )}
 
-      {favoritos.length > 0 && (
-        <div className="favoritos" onClick={(e) => e.stopPropagation()}>
-          <span className="favoritos-etiqueta">Favoritos:</span>
-          {favoritos.map((f, i) => (
-            <span key={i} className="favorito-chip">
-              <button type="button" onClick={() => usarFavorito(f)}>
-                {f.nombre}
-              </button>
-              <button type="button" className="favorito-quitar" onClick={() => eliminarFavorito(i)} aria-label="Quitar de favoritos">
-                ×
-              </button>
-            </span>
-          ))}
-        </div>
-      )}
-
       <div className="fecha-hora">
         <label>
           Fecha:
@@ -617,12 +610,26 @@ export default function Home() {
 
       {favoritos.length > 0 && (
         <div className="favoritos-cerca" onClick={(e) => e.stopPropagation()}>
-          <span className="favoritos-etiqueta">Tus lugares guardados:</span>
-          {favoritos.map((f, i) => (
-            <button key={i} type="button" className="favorito-chip-cerca" onClick={() => usarFavorito(f)}>
-              📍 {f.nombre}
-            </button>
-          ))}
+          <span className="favoritos-etiqueta">
+            Tus lugares guardados ({favoritos.length}/{MAX_FAVORITOS}):
+          </span>
+          <div className="favoritos-cerca-lista">
+            {favoritos.map((f, i) => (
+              <span key={i} className="favorito-chip-cerca">
+                <button type="button" onClick={() => usarFavorito(f)}>
+                  📍 {f.nombre}
+                </button>
+                <button
+                  type="button"
+                  className="favorito-chip-cerca-quitar"
+                  onClick={() => eliminarFavorito(i)}
+                  aria-label="Quitar de favoritos"
+                >
+                  ×
+                </button>
+              </span>
+            ))}
+          </div>
         </div>
       )}
 

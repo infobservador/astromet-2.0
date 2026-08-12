@@ -370,47 +370,10 @@ body {
 }
 
 /* --- Favoritos --- */
-.favoritos {
-  max-width: 480px;
-  margin: 0 auto 16px;
-  text-align: left;
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 6px;
-}
-
 .favoritos-etiqueta {
   color: var(--texto-tenue);
   font-size: 0.8rem;
   margin-right: 4px;
-}
-
-.favorito-chip {
-  display: inline-flex;
-  align-items: center;
-  background-color: var(--azul-claro);
-  border-radius: 16px;
-  overflow: hidden;
-}
-
-.favorito-chip button:first-child {
-  background: none;
-  border: none;
-  color: var(--texto-claro);
-  padding: 5px 10px;
-  font-size: 0.78rem;
-  cursor: pointer;
-  font-family: inherit;
-}
-
-.favorito-quitar {
-  background: none;
-  border: none;
-  color: var(--texto-tenue);
-  padding: 5px 8px 5px 0;
-  cursor: pointer;
-  font-size: 0.9rem;
 }
 
 .boton-favorito {
@@ -591,28 +554,55 @@ body {
   text-align: left;
 }
 
-/* --- Favoritos cerca del mapa (acceso rápido) --- */
+/* --- Favoritos cerca del mapa (acceso rápido, con límite y scroll propio) --- */
 .favoritos-cerca {
   max-width: 640px;
   margin: 12px auto;
+  text-align: left;
+}
+
+.favoritos-cerca-lista {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
   gap: 8px;
+  margin-top: 6px;
+  max-height: 96px;
+  overflow-y: auto;
+  padding-right: 4px;
 }
 
 .favorito-chip-cerca {
+  display: inline-flex;
+  align-items: center;
   background-color: var(--azul-claro);
-  color: var(--texto-claro);
   border: 1px solid var(--naranja);
   border-radius: 16px;
-  padding: 6px 12px;
+  overflow: hidden;
+}
+
+.favorito-chip-cerca button:first-child {
+  background: none;
+  border: none;
+  color: var(--texto-claro);
+  padding: 6px 10px;
   font-size: 0.8rem;
   cursor: pointer;
   font-family: inherit;
 }
 
-.favorito-chip-cerca:hover {
-  background-color: var(--naranja);
-  color: #1a1200;
+.favorito-chip-cerca button:first-child:hover {
+  color: var(--naranja);
+}
+
+.favorito-chip-cerca-quitar {
+  background: none;
+  border: none;
+  color: var(--texto-tenue);
+  padding: 6px 8px 6px 0;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.favorito-chip-cerca-quitar:hover {
+  color: #ff8080;
 }

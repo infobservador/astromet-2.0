@@ -562,3 +562,16 @@ buena opción, con alta gratuita instantánea, sin trámite de aprobación manua
   lista, mostrada en dos lugares para que sea fácil de encontrar sin scrollear.
 - Cada favorito es un botón: un clic carga esa ubicación al instante y recalcula
   todo (clima, sol/luna, Bortle, descripción) para ese lugar guardado.
+
+# Vigésimo octava pasada: una sola lista de favoritos, con límite y scroll propio
+
+- Se sacó la lista de favoritos que aparecía arriba cerca del buscador — quedó **una
+  sola lista**, debajo del mapa, junto al botón "Guardar" (donde ya estás mirando).
+- **Límite de 12 lugares guardados**: al llegar al límite, se borra solo el más
+  antiguo al agregar uno nuevo — nunca hace falta borrar nada a mano, y la lista no
+  crece sin fin.
+- La lista ahora tiene una altura máxima con scroll propio (no toda la pantalla), así
+  que aunque tengas los 12 lugares guardados, no tapa el resto de la app.
+- Se le agregó el botón de "×" para borrar un favorito puntual, que antes solo estaba
+  en la lista de arriba que se sacó.
+- Muestra un contador "(3/12)" para que sea fácil ver cuánto lugar queda.
