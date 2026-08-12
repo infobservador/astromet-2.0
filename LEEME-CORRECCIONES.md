@@ -575,3 +575,25 @@ buena opción, con alta gratuita instantánea, sin trámite de aprobación manua
 - Se le agregó el botón de "×" para borrar un favorito puntual, que antes solo estaba
   en la lista de arriba que se sacó.
 - Muestra un contador "(3/12)" para que sea fácil ver cuánto lugar queda.
+
+# Vigésimo novena pasada: eventos celestes reales (lluvias de meteoros, conjunciones, eclipses)
+
+- Nueva librería `astronomy-engine` (código abierto, validada contra datos de NASA/JPL,
+  sin necesitar clave ni servicio externo — todo se calcula localmente).
+- `lib/eventosCelestes.js`:
+  - **Lluvias de meteoros**: tabla fija con las fechas típicas anuales (pueden variar
+    un día o dos según el año) e indicación de qué tan bien se ven desde el hemisferio
+    sur (algunas, como las Perseidas, se ven mal desde Argentina aunque sean famosas).
+  - **Conjunciones planetarias**: se calcula la separación angular REAL entre los
+    planetas visibles (Mercurio a Saturno) para la fecha/hora/lugar exactos, y se
+    marca como conjunción cuando están a 5° o menos, ambos sobre el horizonte.
+  - **Eclipses**: usa la búsqueda real de eclipses de la librería (solar local para el
+    lugar consultado, lunar global), avisando solo si cae dentro de los próximos 30
+    días. Probado con un caso real: detecta correctamente el eclipse lunar parcial del
+    28 de agosto de 2026.
+- Nueva ruta `pages/api/eventos.js`, consultada en paralelo con el resto de los datos.
+- **El prompt de la IA ahora recibe estos datos reales** y tiene instrucción explícita
+  de darles protagonismo si existen, y de NO mencionar ningún evento si la lista viene
+  vacía (sigue prohibido inventar).
+- Se muestran en una tarjeta nueva "Eventos celestes" en los resultados (solo aparece
+  si hay algo real que mostrar) y en el PDF descargable.

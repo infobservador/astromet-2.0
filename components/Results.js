@@ -216,6 +216,34 @@ export default function Results({ data, advice, descripcionNoche, descripcionFue
         )}
       </div>
 
+      {data.eventosCelestes &&
+        (data.eventosCelestes.lluviasMeteoros?.length > 0 ||
+          data.eventosCelestes.conjunciones?.length > 0 ||
+          data.eventosCelestes.eclipses?.length > 0) && (
+          <>
+            <h3>Eventos celestes</h3>
+            <ul className="lista-eventos">
+              {data.eventosCelestes.lluviasMeteoros?.map((l, i) => (
+                <li key={`lluvia-${i}`}>
+                  🌠 Lluvia de meteoros <strong>{l.nombre}</strong>
+                  {l.esPico ? " — ¡hoy es el pico!" : " (activa)"} · visibilidad desde el sur: {l.visibilidadSur}
+                </li>
+              ))}
+              {data.eventosCelestes.conjunciones?.map((c, i) => (
+                <li key={`conj-${i}`}>
+                  🪐 Conjunción real: {c.cuerpos.join(" y ")}, separados {c.separacionGrados}° en el cielo
+                </li>
+              ))}
+              {data.eventosCelestes.eclipses?.map((e, i) => (
+                <li key={`ecl-${i}`}>
+                  🌘 Eclipse {e.tipo} ({e.clase}) el {new Date(e.fecha).toLocaleDateString("es-AR", { day: "numeric", month: "long" })}
+                  {e.tipo === "solar" ? ` — obscuración ${e.obscuracion}% desde este lugar` : ""}
+                </li>
+              ))}
+            </ul>
+          </>
+        )}
+
       <h3>Contaminación lumínica</h3>
       <div className="tarjetas-grid">
         <Tarjeta icono={<IconoOjo />} etiqueta="Escala de Bortle" valor={bortle !== null && bortle !== undefined ? bortle : "No disponible"} />

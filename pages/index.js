@@ -293,12 +293,16 @@ export default function Home() {
     setBanderaRoja(false);
     setMotivosBanderaRoja([]);
 
-    const [weatherResult, solYLunaResult, bortleResult, lugarResult] = await Promise.allSettled([
+    const [weatherResult, solYLunaResult, bortleResult, lugarResult, eventosResult] = await Promise.allSettled([
       fetchJSON(`/api/weather?lat=${lat}&lon=${lng}&desde=${rango.desde.toISOString()}&hasta=${rango.hasta.toISOString()}`),
       fetchJSON(`/api/solyluna?lat=${lat}&lon=${lng}&fecha=${rango.desde.toISOString()}`),
       fetchJSON(`/api/bortle?lat=${lat}&lon=${lng}`),
       fetchJSON(`/api/lugar?lat=${lat}&lon=${lng}`),
+      fetchJSON(`/api/eventos?lat=${lat}&lon=${lng}&fecha=${rango.desde.toISOString()}`),
     ]);
+
+    const eventosCelestes =
+      eventosResult.status === "fulfilled" ? eventosResult.value : { lluviasMeteoros: [], conjunciones: [], eclipses: [] };
 
     if (weatherResult.status === "fulfilled") {
       const { bloques, promedio, fuentes } = weatherResult.value;
@@ -312,6 +316,7 @@ export default function Home() {
         solLuna,
         bortle: bortleInfo.bortle,
         bortleComentario: bortleInfo.comentario,
+        eventosCelestes,
       });
       setAdvice(generarConsejo(promedio, bortleInfo.bortle, solLuna?.iluminacionLunarPorc, bloques));
 
@@ -330,6 +335,7 @@ export default function Home() {
             bloques,
             solLuna,
             bortleInfo,
+            eventosCelestes,
             codigoOperador: codigoOperador || undefined,
           }),
         });

@@ -13,13 +13,33 @@ import { obtenerOperador, descontarCredito, permitidoPorTopeDiarioPromo } from "
 import { estaEnPeriodoDePrueba } from "../../lib/promocion";
 import { notaConfianza } from "../../lib/confianzaPronostico";
 
-function armarPrompt({ lugarNombre, fecha, desdeHora, hastaHora, bloques, solLuna, bortleInfo }) {
+function armarPrompt({ lugarNombre, fecha, desdeHora, hastaHora, bloques, solLuna, bortleInfo, eventosCelestes }) {
   const resumenBloques = bloques
     .map((b) => {
       const hora = new Date(b.hora).toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" });
       return `${hora}: ${b.nubosidad}% nubosidad, ${b.temperatura.toFixed(1)}°C, viento ${b.viento.toFixed(1)} m/s, humedad ${b.humedad}%${b.condicion ? `, condición: ${b.condicion}` : ""}`;
     })
     .join("\n");
+
+  const lineasEventos = [];
+  for (const l of eventosCelestes?.lluviasMeteoros || []) {
+    lineasEventos.push(
+      `- Lluvia de meteoros "${l.nombre}"${l.esPico ? " (HOY ES EL PICO)" : " (activa, no es el pico exacto)"}, visibilidad desde el hemisferio sur: ${l.visibilidadSur}.`
+    );
+  }
+  for (const c of eventosCelestes?.conjunciones || []) {
+    lineasEventos.push(`- Conjunción real esta noche: ${c.cuerpos.join(" y ")}, separados por ${c.separacionGrados}° en el cielo.`);
+  }
+  for (const e of eventosCelestes?.eclipses || []) {
+    const fechaEclipse = new Date(e.fecha).toLocaleDateString("es-AR", { day: "numeric", month: "long" });
+    lineasEventos.push(
+      `- Eclipse ${e.tipo} (${e.clase}) el ${fechaEclipse}${e.tipo === "solar" ? `, obscuración ${e.obscuracion}% desde este lugar` : ""}.`
+    );
+  }
+  const bloqueEventos =
+    lineasEventos.length > 0
+      ? `Eventos celestes REALES y confirmados para esta consulta (calculados con astronomy-engine, no inventados):\n${lineasEventos.join("\n")}`
+      : "Eventos celestes: no hay ninguna lluvia de meteoros activa, conjunción notable, ni eclipse próximo para esta fecha y lugar.";
 
   return `Sos un asesor experto en astroturismo, redactando para operadores turísticos profesionales que le van a mostrar este texto directamente a sus clientes o usarlo para planificar la actividad. El texto tiene que ser tan útil y específico que justifique pagar por esta herramienta.
 
@@ -45,18 +65,21 @@ Sol y luna:
 Contaminación lumínica:
 - Escala de Bortle: ${bortleInfo?.bortle ?? "sin dato"} (fuente: ${bortleInfo?.fuente === "satelital" ? "datos satelitales reales" : "estimación por tipo de lugar"})
 
+${bloqueEventos}
+
 CONTEXTO IMPORTANTE — Astroturismo, no astronomía de investigación:
 El público es turístico general, no astrónomos con equipo avanzado. Esto significa:
 - NUNCA recomiendes objetos débiles que solo se ven con telescopios grandes y larga exposición (nebulosas tenues, galaxias débiles, cúmulos poco brillantes). Un turista no las va a poder ver a simple vista ni con binoculares/telescopios de aficionado chicos.
 - Enfocate en objetos BRILLANTES y accesibles: cúmulos abiertos brillantes (ej. Las Pléyades), cúmulos globulares brillantes, galaxias brillantes visibles a simple vista o con binoculares (ej. la Vía Láctea como banda, o galaxias satélite si son visibles desde el hemisferio correspondiente), planetas (si sabés cuáles están arriba por los datos, si no, no los nombres), la Luna, y constelaciones reconocibles.
 - El componente de MITOLOGÍA Y CULTURA (historias, cosmovisiones, leyendas asociadas al cielo nocturno) tiene que estar SIEMPRE presente en el texto, en mayor o menor medida — es parte central de la experiencia de astroturismo, no un relleno. Cuando el cielo está feo/nublado, este componente pasa a ser el protagonista de la actividad (ya que no se puede observar bien), no solo una mención de pasada.
+- Si hay eventos celestes reales listados arriba (lluvia de meteoros, conjunción, eclipse), mencionalos y dales protagonismo — son justo el tipo de dato que hace valiosa esta herramienta. Si la lista dice que no hay ninguno, NO menciones ningún evento especial, ni inventes uno.
 
 Escribí una descripción profesional de la noche en 2 a 3 párrafos cortos, en español rioplatense, que:
 1. Resuma el panorama general de la noche, mencionando horas exactas si hay tramos problemáticos (mucha nubosidad, viento, humedad).
-2. Dé UNA recomendación operativa concreta y accionable, adaptada específicamente a estos datos: qué observar (siempre objetos brillantes/accesibles, nunca objetos débiles), cómo estructurar la actividad, y el componente de mitología/cultura correspondiente. Si el cielo no acompaña, sumá una actividad alternativa (realidad aumentada/virtual, cata de productos regionales, fotografía) — pero la mitología no se reemplaza, se refuerza. Elegí lo que mejor encaje esta noche en particular, no listes todas las opciones juntas.
+2. Dé UNA recomendación operativa concreta y accionable, adaptada específicamente a estos datos: qué observar (siempre objetos brillantes/accesibles, nunca objetos débiles, y priorizando cualquier evento celeste real de la lista de arriba si lo hay), cómo estructurar la actividad, y el componente de mitología/cultura correspondiente. Si el cielo no acompaña, sumá una actividad alternativa (realidad aumentada/virtual, cata de productos regionales, fotografía) — pero la mitología no se reemplaza, se refuerza. Elegí lo que mejor encaje esta noche en particular, no listes todas las opciones juntas.
 
 Restricciones importantes:
-- NO inventes objetos celestes específicos (planetas visibles, lluvias de meteoros, cometas, eclipses) que no estén en los datos de arriba.
+- NO inventes objetos celestes específicos (planetas visibles, lluvias de meteoros, cometas, eclipses) que no estén en los datos de arriba. Los eventos celestes reales SOLO son los que aparecen explícitamente en la sección "Eventos celestes REALES" de arriba (si la hay) — cualquier otro evento que se te ocurra no es real, no lo menciones.
 - NO recomiendes objetos de cielo profundo débiles (nebulosas tenues, galaxias débiles) — esto es astroturismo, no observación de investigación.
 - No repitas siempre la misma estructura de frases entre distintas consultas; sonar natural y variado.
 - Tono profesional pero cálido, como un especialista hablándole a un colega del rubro.
@@ -68,7 +91,8 @@ export default async function handler(req, res) {
     return res.status(405).json({ error: "Método no permitido" });
   }
 
-  const { lugarNombre, fecha, desdeHora, hastaHora, bloques, solLuna, bortleInfo, codigoOperador } = req.body || {};
+  const { lugarNombre, fecha, desdeHora, hastaHora, bloques, solLuna, bortleInfo, eventosCelestes, codigoOperador } =
+    req.body || {};
 
   if (!Array.isArray(bloques) || bloques.length === 0) {
     return res.status(400).json({ error: "Faltan datos de clima para generar la descripción." });
@@ -122,7 +146,7 @@ export default async function handler(req, res) {
 
   if (puedeUsarIA) {
     try {
-      const prompt = armarPrompt({ lugarNombre, fecha, desdeHora, hastaHora, bloques, solLuna, bortleInfo });
+      const prompt = armarPrompt({ lugarNombre, fecha, desdeHora, hastaHora, bloques, solLuna, bortleInfo, eventosCelestes });
 
       const r = await fetch("https://api.anthropic.com/v1/messages", {
         method: "POST",

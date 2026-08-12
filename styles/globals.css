@@ -606,3 +606,15 @@ body {
 .favorito-chip-cerca-quitar:hover {
   color: #ff8080;
 }
+
+.lista-eventos {
+  background-color: rgba(255, 122, 41, 0.1);
+  border-radius: 8px;
+  padding: 12px 16px 12px 32px;
+  margin: 0 0 12px;
+}
+
+.lista-eventos li {
+  margin-bottom: 6px;
+  font-size: 0.9rem;
+}
