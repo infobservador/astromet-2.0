@@ -653,6 +653,15 @@ export default function Home() {
           <button className="boton-naranja" onClick={handleDescargarPdf}>
             Descargar reporte en PDF
           </button>
+          {coords && (
+            <a
+              className="boton-naranja"
+              href={`/eventos-anuales?lat=${coords.lat}&lon=${coords.lng}&nombre=${encodeURIComponent(lugarNombre || "")}`}
+              style={{ textDecoration: "none", display: "inline-block", marginLeft: 10 }}
+            >
+              📅 Ver eventos del año
+            </a>
+          )}
         </div>
       )}
 

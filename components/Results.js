@@ -241,6 +241,13 @@ export default function Results({ data, advice, descripcionNoche, descripcionFue
                 </li>
               ))}
             </ul>
+            {data.eventosCelestes.lluviasMeteoros?.length > 0 && (
+              <p className="aviso-lluvia-meteoros">
+                Las lluvias de meteoros solo se ven bien a simple vista bajo cielos realmente oscuros. Con contaminación
+                lumínica moderada o alta (ver Bortle más abajo), la mayoría de los meteoros no van a ser visibles, aunque
+                la altura del radiante sea buena.
+              </p>
+            )}
           </>
         )}
 

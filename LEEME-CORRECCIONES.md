@@ -615,3 +615,54 @@ buena opción, con alta gratuita instantánea, sin trámite de aprobación manua
 - Conjunciones y eclipses ya funcionaban correctamente para cualquier lugar del mundo
   desde que se agregaron (usan la latitud/longitud real de la consulta para calcular
   la posición de los astros), no hizo falta tocarlos.
+
+# Trigésimo primera pasada: calendario anual, clasificación de lluvias, PDF mejorado, contenido inclusivo
+
+## Clasificación de lluvias de meteoros (umbrales exactos pedidos)
+- Menos de 30° de altura del radiante = "muy mala" visibilidad.
+- Menos de 10° = "no visible" (y ahora se excluye directamente de los resultados,
+  tanto en la vista de "esta noche" como en el calendario anual — antes se mostraba
+  igual con la etiqueta confusa "no visible").
+
+## Eclipse "partial" → "parcial"
+- Se agregó una traducción (`traducirClaseEclipse`) para que el tipo de eclipse
+  siempre se muestre en español ("parcial", "total", "anular", "penumbral") en vez del
+  valor en inglés que devuelve la librería.
+
+## Descripción de la noche: lluvias no son el centro, y ventana horaria real
+- El prompt de la IA ahora aclara que las lluvias de meteoros solo son visibles a
+  simple vista bajo cielos REALMENTE oscuros (Bortle bajo) — con contaminación
+  lumínica moderada/alta, la mayoría de los meteoros no se ven aunque el radiante esté
+  bien ubicado. Mismo aviso agregado como texto fijo debajo de la tarjeta de eventos
+  en los resultados.
+- Los eventos celestes ahora se mencionan como "un dato más", nunca como el centro ni
+  el título de toda la actividad.
+- Nueva instrucción sobre la VENTANA HORARIA REAL: aunque el horario elegido se
+  extienda hasta la madrugada, la actividad turística real ocurre mayormente entre el
+  atardecer y la 1 de la mañana — la IA ahora prioriza recomendar lo que esté
+  realmente visible en esa franja temprana, en vez de generalizar "toda la noche" o
+  recomendar objetos que recién se ven bien mucho más tarde.
+
+## Contenido de mitología, juegos y accesibilidad para noches nubladas
+- Se sumaron al pool de actividades alternativas (usado tanto por el generador por
+  reglas como mencionado explícitamente en el prompt de la IA): charla de mitología y
+  cosmovisiones de distintas culturas, juegos de orientación estelar más detallados, y
+  material táctil/auditivo del cielo nocturno para personas ciegas o con baja visión.
+
+## PDF de una noche: fecha y lugar más claros
+- El lugar y la fecha (en formato legible, ej. "sábado 15 de agosto de 2026") ahora
+  aparecen bien destacados arriba de todo el documento, antes de cualquier otro dato
+  (ya estaban presentes antes, pero como texto plano mezclado con el resto — ahora
+  tienen su propio bloque prominente).
+
+## Nueva página: Calendario de eventos del año (2 años, separado del resto)
+- Botón "📅 Ver eventos del año" junto al de descargar PDF, que lleva a una página
+  NUEVA y separada (`/eventos-anuales`) — no se mezcla con los resultados de una noche
+  puntual.
+- Calcula, para el lugar elegido, TODOS los eclipses (solares locales y lunares
+  globales) y TODAS las conjunciones planetarias reales de los próximos 2 años
+  (año actual + siguiente), además de las lluvias de meteoros anuales — filtrando
+  automáticamente lo que no seria visible desde ese lugar.
+- Agrupado por mes, con su propio botón de descarga en PDF (`lib/generarPdfEventosAnuales.js`),
+  totalmente separado del PDF de una noche.
+- Probado con datos reales: el cálculo completo de 2 años tarda menos de 300ms.
