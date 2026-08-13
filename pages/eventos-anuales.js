@@ -29,12 +29,13 @@ export default function EventosAnuales() {
   const [eventos, setEventos] = useState(null);
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState("");
+  const [anios, setAnios] = useState(1);
 
   useEffect(() => {
     if (!lat || !lon) return;
     setCargando(true);
     setError("");
-    fetch(`/api/eventosAnuales?lat=${lat}&lon=${lon}`)
+    fetch(`/api/eventosAnuales?lat=${lat}&lon=${lon}&anios=${anios}`)
       .then((r) => r.json())
       .then((json) => {
         if (json.error) throw new Error(json.error);
@@ -42,7 +43,7 @@ export default function EventosAnuales() {
       })
       .catch((err) => setError(err.message))
       .finally(() => setCargando(false));
-  }, [lat, lon]);
+  }, [lat, lon, anios]);
 
   async function descargarPdf() {
     const { generarPdfEventosAnuales } = await import("../lib/generarPdfEventosAnuales");
@@ -76,17 +77,32 @@ export default function EventosAnuales() {
       </a>
       <h1>Calendario de eventos celestes</h1>
       <p className="subtitulo-eventos">
-        {nombre ? <strong>{nombre}</strong> : `${lat}, ${lon}`} — próximos 2 años, solo eventos visibles desde este lugar
+        {nombre ? <strong>{nombre}</strong> : `${lat}, ${lon}`} — {anios === 1 ? "próximo año" : "próximos 2 años"}, solo
+        eventos visibles desde este lugar
       </p>
+
+      <div style={{ marginBottom: 16, display: "flex", gap: 8 }}>
+        <button className="boton-naranja" onClick={() => setAnios(1)} disabled={anios === 1}>
+          1 año
+        </button>
+        <button className="boton-naranja" onClick={() => setAnios(2)} disabled={anios === 2}>
+          2 años
+        </button>
+      </div>
 
       {cargando && <p>Calculando eventos (puede tardar unos segundos)...</p>}
       {error && <p className="error-clima">{error}</p>}
 
       {eventos && (
         <>
-          <button className="boton-naranja" onClick={descargarPdf} style={{ marginBottom: 24 }}>
-            Descargar calendario en PDF
-          </button>
+          <div style={{ display: "flex", gap: 8, marginBottom: 24 }}>
+            <button className="boton-naranja" onClick={descargarPdf}>
+              Descargar en PDF
+            </button>
+            <button className="boton-naranja" onClick={() => window.print()}>
+              🖨️ Imprimir
+            </button>
+          </div>
 
           {grupos.length === 0 && <p>No se detectaron eventos celestes relevantes en este rango.</p>}
 

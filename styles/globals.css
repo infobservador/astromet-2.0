@@ -675,3 +675,25 @@ body {
   font-size: 0.82rem;
   margin-top: 2px;
 }
+
+.acciones-eventos-anuales {
+  margin: 8px 0 20px;
+}
+
+@media print {
+  .pagina-eventos-anuales {
+    background: white !important;
+    color: black !important;
+  }
+  .pagina-eventos-anuales .volver-app,
+  .pagina-eventos-anuales button {
+    display: none !important;
+  }
+  .mes-eventos h2 {
+    color: #000 !important;
+  }
+  .mes-eventos-detalle,
+  .subtitulo-eventos {
+    color: #555 !important;
+  }
+}

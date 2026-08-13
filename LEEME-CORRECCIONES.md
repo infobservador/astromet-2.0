@@ -666,3 +666,15 @@ buena opción, con alta gratuita instantánea, sin trámite de aprobación manua
 - Agrupado por mes, con su propio botón de descarga en PDF (`lib/generarPdfEventosAnuales.js`),
   totalmente separado del PDF de una noche.
 - Probado con datos reales: el cálculo completo de 2 años tarda menos de 300ms.
+
+# Trigésimo segunda pasada: ajustes al calendario anual
+
+- Botón "Ver eventos del año" separado del de "Descargar reporte en PDF" (fila propia).
+- Los eclipses de sol SÍ se calculan bien (probado: encontró uno real, 6 de febrero de
+  2027, 81.9% de obscuración) — no aparecía a simple vista porque quedaba abajo en una
+  lista larga de 2 años. Ahora el eclipse solar solo se ignora si su obscuración es
+  menor al 1% (imperceptible en la práctica).
+- Por defecto ahora muestra **1 año** (no 2), con dos botones arriba para elegir "1
+  año" / "2 años" si se quiere ver más.
+- Botón "🖨️ Imprimir" además del de PDF, con estilos para que se imprima prolijo
+  (fondo blanco, sin botones).
