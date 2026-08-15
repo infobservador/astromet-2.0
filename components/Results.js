@@ -9,6 +9,8 @@ const colorPorNivel = {
   Excelente: "#8ee6a0",
   Buena: "#ffd27a",
   Regular: "#ffb4a2",
+  Mediocre: "#ffb4a2",
+  Mala: "#ff8080",
   Peligro: "#ff4d4d",
 };
 

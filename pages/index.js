@@ -114,16 +114,35 @@ function generarConsejo(clima, bortle, iluminacionLunarPorc, bloques) {
     }
   }
 
+  // La nubosidad manda: no tiene sentido que buen viento/Bortle/luna "compensen" un
+  // cielo tapado. Antes esto podía pasar (ej: 100% nublado + buen Bortle daba "Buena").
   const razones = [];
-  let puntaje = 0;
+  const nubes = clima.clouds;
 
-  if (clima.clouds < 30) puntaje += 2;
-  else if (clima.clouds < 70) {
-    puntaje += 1;
-    razones.push("nubosidad moderada");
-  } else {
-    razones.push("nubosidad alta");
+  if (nubes >= 90) {
+    return {
+      nivel: "Mala",
+      texto:
+        "Cielo prácticamente cubierto: no se van a poder ver estrellas. Conviene reprogramar la observación o " +
+        "enfocar la actividad puertas adentro (mitología, charlas, realidad aumentada/virtual).",
+      puntaje: -10,
+    };
   }
+
+  if (nubes >= 60) {
+    return {
+      nivel: "Mediocre",
+      texto:
+        "Nubosidad alta: la visibilidad va a ser muy limitada, quizás algún claro puntual con objetos muy brillantes. " +
+        "Vale la pena revisar si hay algún paso visible de la Estación Espacial Internacional (ISS) esa noche — es " +
+        "muy brillante (más que cualquier estrella) y a veces se alcanza a ver incluso con parte del cielo cubierto.",
+      puntaje: 0,
+    };
+  }
+
+  // Con menos de 60% de nubes, ahí sí tiene sentido afinar con el resto de los factores.
+  let puntaje = nubes < 30 ? 2 : 1;
+  if (nubes >= 30) razones.push("nubosidad parcial");
 
   if (clima.wind > 25) razones.push("viento fuerte");
   else puntaje += 1;
