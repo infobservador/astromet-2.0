@@ -742,3 +742,29 @@ body {
   font-size: 1rem;
   margin-bottom: 10px;
 }
+
+.imagenes-sol-luna {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.imagen-sol-luna {
+  flex: 1;
+  min-width: 140px;
+  text-align: center;
+}
+
+.imagen-sol-luna img {
+  width: 100%;
+  max-width: 180px;
+  border-radius: 8px;
+}
+
+.imagen-sol-luna span {
+  display: block;
+  font-size: 0.72rem;
+  color: var(--texto-tenue);
+  margin-top: 4px;
+}

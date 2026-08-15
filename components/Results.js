@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 function formatHora(iso) {
   if (!iso) return "—";
@@ -144,6 +144,23 @@ function Tarjeta({ icono, etiqueta, valor }) {
   );
 }
 
+function ImagenLunaReal({ iluminacion }) {
+  const [url, setUrl] = useState(null);
+  useEffect(() => {
+    fetch("/api/lunaImagen")
+      .then((r) => r.json())
+      .then((d) => setUrl(d.url))
+      .catch(() => setUrl(null));
+  }, []);
+  if (!url) return null;
+  return (
+    <>
+      <img src={url} alt="Foto real de la Luna en su fase actual (NASA)" loading="lazy" />
+      <span>🌙 Fase actual: {iluminacion}% iluminada (imagen real, NASA Dial-A-Moon)</span>
+    </>
+  );
+}
+
 export default function Results({ data, advice, descripcionNoche, descripcionFuente }) {
   const { weather, solLuna, bortle } = data;
   const [mostrarInfoInu, setMostrarInfoInu] = useState(false);
@@ -237,6 +254,24 @@ export default function Results({ data, advice, descripcionNoche, descripcionFue
       ) : (
         <p>No se pudieron calcular los horarios de sol y luna.</p>
       )}
+
+      <h3>Sol y Luna en tiempo real</h3>
+      <div className="imagenes-sol-luna">
+        <div className="imagen-sol-luna">
+          <img
+            src="https://soho.nascom.nasa.gov/data/realtime/hmi_igr/512/latest.jpg"
+            alt="Imagen real del Sol en luz visible (NASA/SOHO), actualizada automáticamente"
+            loading="lazy"
+            onError={(e) => (e.target.style.display = "none")}
+          />
+          <span>☀️ El Sol ahora mismo (NASA/SOHO, luz visible)</span>
+        </div>
+        {solLuna && (
+          <div className="imagen-sol-luna">
+            <ImagenLunaReal iluminacion={solLuna.iluminacionLunarPorc} />
+          </div>
+        )}
+      </div>
 
       <h3>Clima</h3>
       {data.weatherFuentes && data.weatherFuentes.length > 0 && (
