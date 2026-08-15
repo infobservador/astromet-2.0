@@ -324,7 +324,7 @@ export default function Home() {
       eventosResult.status === "fulfilled" ? eventosResult.value : { lluviasMeteoros: [], conjunciones: [], eclipses: [] };
 
     if (weatherResult.status === "fulfilled") {
-      const { bloques, promedio, fuentes } = weatherResult.value;
+      const { bloques, promedio, fuentes, inu } = weatherResult.value;
 
       const solLuna = solYLunaResult.status === "fulfilled" ? solYLunaResult.value : null;
       const bortleInfo = bortleResult.status === "fulfilled" ? bortleResult.value : { bortle: null, comentario: null };
@@ -332,6 +332,7 @@ export default function Home() {
       setData({
         weather: promedio,
         weatherFuentes: fuentes,
+        inu,
         solLuna,
         bortle: bortleInfo.bortle,
         bortleComentario: bortleInfo.comentario,

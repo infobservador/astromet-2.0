@@ -205,6 +205,16 @@ export default function Results({ data, advice, descripcionNoche, descripcionFue
       )}
 
       <h3>Clima</h3>
+      {data.inu && (
+        <p className="inu-linea">
+          🌙 <strong>Índice de Noche Útil: {data.inu.valor}/100 — {data.inu.nivel}</strong>
+          <br />
+          <span className="inu-detalle">
+            nubosidad media {data.inu.nubosidadMedia}% · dispersión entre fuentes {data.inu.dispersion}pp · evolución:{" "}
+            {data.inu.evolucion} · nubes: {data.inu.tipoNubeDominante}
+          </span>
+        </p>
+      )}
       {data.weatherFuentes && data.weatherFuentes.length > 0 && (
         <p className="fuentes-clima">Fuentes: {data.weatherFuentes.join(" + ")}</p>
       )}

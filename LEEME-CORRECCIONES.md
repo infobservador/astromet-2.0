@@ -678,3 +678,11 @@ buena opción, con alta gratuita instantánea, sin trámite de aprobación manua
   año" / "2 años" si se quiere ver más.
 - Botón "🖨️ Imprimir" además del de PDF, con estilos para que se imprima prolijo
   (fondo blanco, sin botones).
+
+# Trigésimo tercera: Índice de Noche Útil (INU)
+- Nuevo cálculo en pages/api/weather.js: combina nubosidad media, dispersión REAL
+  entre OpenWeather y Open-Meteo (en vez de modelos nuevos sin probar), evolución
+  horaria (mejora/empeora), y tipo de nube por altura (bajas/medias/altas, vía
+  cloud_cover_low/mid/high de Open-Meteo). Pesos heurísticos, igual que la fórmula
+  que propusiste — no calibrados aún con la herramienta de verificación.
+- Se muestra en los resultados como "🌙 Índice de Noche Útil: X/100 — nivel".

@@ -35,7 +35,7 @@ async function consultarOpenWeather(lat, lon, desdeMs, hastaMs) {
 async function consultarOpenMeteo(lat, lon, desdeMs, hastaMs) {
   const r = await fetch(
     `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}` +
-      `&hourly=temperature_2m,cloudcover,relative_humidity_2m,wind_speed_10m,precipitation_probability,weathercode` +
+      `&hourly=temperature_2m,cloudcover,relative_humidity_2m,wind_speed_10m,precipitation_probability,weathercode,cloud_cover_low,cloud_cover_mid,cloud_cover_high` +
       `&wind_speed_unit=ms&timezone=UTC&forecast_days=16`
   );
   if (!r.ok) throw new Error(`Open-Meteo respondió ${r.status}`);
@@ -53,6 +53,9 @@ async function consultarOpenMeteo(lat, lon, desdeMs, hastaMs) {
         humedad: data.hourly.relative_humidity_2m[i],
         viento: data.hourly.wind_speed_10m[i],
         condicion: mapearCodigoClimaOpenMeteo(data.hourly.weathercode?.[i]),
+        nubesBajas: data.hourly.cloud_cover_low?.[i] ?? null,
+        nubesMedias: data.hourly.cloud_cover_mid?.[i] ?? null,
+        nubesAltas: data.hourly.cloud_cover_high?.[i] ?? null,
         probabilidadPrecipitacion: data.hourly.precipitation_probability?.[i] ?? null,
         fuente: "Open-Meteo",
       });
@@ -177,9 +180,80 @@ export default async function handler(req, res) {
   // OpenWeather (cada 3 horas).
   const bloquesParaAnalisis = bloquesOpenMeteo || bloquesOpenWeather;
 
+  const inu = calcularINU({ promedios, bloques: bloquesParaAnalisis });
+
   res.status(200).json({
     bloques: bloquesParaAnalisis,
     promedio: promedioCombinado,
     fuentes: fuentesUsadas,
+    inu,
   });
+}
+
+// Índice de "Noche Útil": combina nubosidad media, dispersión ENTRE nuestras dos
+// fuentes (OpenWeather vs Open-Meteo — cuando difieren mucho, hay menos confianza
+// real en el pronóstico, más allá de cuál sea el promedio), evolución horaria
+// (mejora/empeora), y tipo de nube por altura (bajas = crítico, altas = poco impacto).
+// Los pesos son heurísticos, pensados para orientar, no para tomarse como verdad
+// absoluta — igual que el resto de los pronósticos de esta app.
+function calcularINU({ promedios, bloques }) {
+  if (!bloques || bloques.length === 0 || promedios.length === 0) return null;
+
+  const nm = promedios.reduce((a, p) => a + p.clouds, 0) / promedios.length;
+
+  const dispersion =
+    promedios.length >= 2 ? Math.abs(promedios[0].clouds - promedios[1].clouds) : 0;
+
+  const mitad = Math.floor(bloques.length / 2);
+  const primeraMitad = bloques.slice(0, Math.max(mitad, 1));
+  const segundaMitad = bloques.slice(mitad);
+  const promedioPrimera = primeraMitad.reduce((a, b) => a + b.nubosidad, 0) / primeraMitad.length;
+  const promedioSegunda = segundaMitad.reduce((a, b) => a + b.nubosidad, 0) / segundaMitad.length;
+  let ajusteEvolucion = 0;
+  let evolucion = "estable";
+  if (promedioSegunda < promedioPrimera - 10) {
+    ajusteEvolucion = 10;
+    evolucion = "mejora";
+  } else if (promedioSegunda > promedioPrimera + 10) {
+    ajusteEvolucion = -15;
+    evolucion = "empeora";
+  }
+
+  const conDatosAltura = bloques.filter((b) => b.nubesBajas !== null && b.nubesBajas !== undefined);
+  let ajusteTipo = 0;
+  let tipoDominante = "sin dato";
+  if (conDatosAltura.length > 0) {
+    const bajas = conDatosAltura.reduce((a, b) => a + b.nubesBajas, 0) / conDatosAltura.length;
+    const medias = conDatosAltura.reduce((a, b) => a + b.nubesMedias, 0) / conDatosAltura.length;
+    const altas = conDatosAltura.reduce((a, b) => a + b.nubesAltas, 0) / conDatosAltura.length;
+    if (bajas >= medias && bajas >= altas && bajas > 20) {
+      ajusteTipo = -20;
+      tipoDominante = "bajas (crítico)";
+    } else if (altas >= medias && altas > 20 && bajas < 20) {
+      ajusteTipo = 10;
+      tipoDominante = "altas (poco impacto)";
+    } else if (medias > 20) {
+      tipoDominante = "medias (moderado)";
+    } else {
+      tipoDominante = "despejado";
+    }
+  }
+
+  let valor = 100 - nm * 0.7 - dispersion * 0.5 + ajusteEvolucion + ajusteTipo;
+  valor = Math.max(0, Math.min(100, Math.round(valor)));
+
+  let nivel;
+  if (valor >= 80) nivel = "Noche excelente";
+  else if (valor >= 60) nivel = "Usable (riesgo moderado)";
+  else if (valor >= 40) nivel = "Marginal";
+  else nivel = "No salir";
+
+  return {
+    valor,
+    nivel,
+    nubosidadMedia: Math.round(nm),
+    dispersion: Math.round(dispersion),
+    evolucion,
+    tipoNubeDominante: tipoDominante,
+  };
 }
