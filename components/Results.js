@@ -1,3 +1,5 @@
+import { useState } from "react";
+
 function formatHora(iso) {
   if (!iso) return "—";
   const fecha = new Date(iso);
@@ -144,6 +146,7 @@ function Tarjeta({ icono, etiqueta, valor }) {
 
 export default function Results({ data, advice, descripcionNoche, descripcionFuente }) {
   const { weather, solLuna, bortle } = data;
+  const [mostrarInfoInu, setMostrarInfoInu] = useState(false);
 
   return (
     <div className="panel-resultados">
@@ -151,6 +154,37 @@ export default function Results({ data, advice, descripcionNoche, descripcionFue
         <p className="consejo" style={{ color: colorPorNivel[advice.nivel] || "inherit" }}>
           {advice.nivel}: {advice.texto}
         </p>
+      )}
+
+      {data.inu && (
+        <div className="inu-linea">
+          <div className="inu-header">
+            <strong>
+              🌙 Índice de Noche Útil: {data.inu.valor}/100 — {data.inu.nivel}
+            </strong>
+            <button type="button" className="inu-boton-info" onClick={() => setMostrarInfoInu(!mostrarInfoInu)}>
+              {mostrarInfoInu ? "Ocultar" : "❓ ¿Qué es esto?"}
+            </button>
+          </div>
+          <span className="inu-detalle">
+            nubosidad media {data.inu.nubosidadMedia}% · dispersión entre fuentes {data.inu.dispersion}pp · evolución:{" "}
+            {data.inu.evolucion} · nubes: {data.inu.tipoNubeDominante}
+          </span>
+          {mostrarInfoInu && (
+            <p className="inu-explicacion">
+              El INU no mide si la noche es "buena" (para eso está el resumen de arriba) — mide{" "}
+              <strong>qué tan confiable es el pronóstico de nubosidad en sí</strong>. Combina cuatro cosas: la
+              nubosidad promedio, la <strong>dispersión</strong> entre nuestras dos fuentes de clima (si ambas dicen
+              algo parecido, hay más confianza; si difieren mucho, aunque el promedio parezca bueno, hay más
+              incertidumbre real), si la nubosidad tiende a mejorar o empeorar en el transcurso de la noche, y qué
+              tipo de nubes predominan (las bajas tapan todo, las altas casi no afectan la observación). 80-100 =
+              noche excelente, 60-80 = usable con riesgo moderado, 40-60 = marginal, menos de 40 = mejor no salir.
+              Es una guía adicional, no un reemplazo del pronóstico — los pesos usados son criterios razonables, no
+              una fórmula validada científicamente (más detalle en "Fuentes y precisión técnica", al pie de la
+              página).
+            </p>
+          )}
+        </div>
       )}
 
       {descripcionNoche && descripcionNoche.length > 0 && (
@@ -205,16 +239,6 @@ export default function Results({ data, advice, descripcionNoche, descripcionFue
       )}
 
       <h3>Clima</h3>
-      {data.inu && (
-        <p className="inu-linea">
-          🌙 <strong>Índice de Noche Útil: {data.inu.valor}/100 — {data.inu.nivel}</strong>
-          <br />
-          <span className="inu-detalle">
-            nubosidad media {data.inu.nubosidadMedia}% · dispersión entre fuentes {data.inu.dispersion}pp · evolución:{" "}
-            {data.inu.evolucion} · nubes: {data.inu.tipoNubeDominante}
-          </span>
-        </p>
-      )}
       {data.weatherFuentes && data.weatherFuentes.length > 0 && (
         <p className="fuentes-clima">Fuentes: {data.weatherFuentes.join(" + ")}</p>
       )}

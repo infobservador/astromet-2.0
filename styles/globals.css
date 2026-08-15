@@ -709,3 +709,36 @@ body {
   color: var(--texto-tenue);
   font-size: 0.78rem;
 }
+
+.inu-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.inu-boton-info {
+  background: none;
+  border: 1px solid var(--naranja);
+  color: var(--naranja);
+  border-radius: 6px;
+  padding: 2px 8px;
+  font-size: 0.75rem;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.inu-explicacion {
+  margin-top: 8px;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: var(--texto-claro);
+}
+
+.instrucciones-destacadas {
+  color: var(--naranja);
+  font-weight: bold;
+  font-size: 1rem;
+  margin-bottom: 10px;
+}

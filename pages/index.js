@@ -38,6 +38,7 @@ const INFO_BOTONES_FOOTER = {
       "El resultado siempre indica explícitamente de cuál de las dos fuentes proviene el valor mostrado. " +
       "Descripción de la noche: cuando está disponible, el texto lo redacta Claude (IA de Anthropic) a partir de los datos ya calculados por la aplicación (nunca inventa datos astronómicos que no estén en esos cálculos). Si la IA no está configurada, se usa en su lugar un generador local por reglas fijas. La aplicación siempre indica cuál de las dos fuentes se usó. " +
       "Nombre del lugar: se obtiene por geocodificación inversa a través de OpenStreetMap/Nominatim, un servicio colaborativo y gratuito que puede no tener nombres precisos en zonas muy despobladas o rurales. " +
+      "Índice de Noche Útil (INU): mide la CONFIABILIDAD del pronóstico de nubosidad, no si la noche es buena. Fórmula: 100 − (nubosidad media × 0.7) − (dispersión entre OpenWeather y Open-Meteo × 0.5) + ajuste por evolución horaria (+10 si mejora, −15 si empeora) + ajuste por tipo de nube dominante (+10 si son altas/cirros, −20 si son bajas). Los pesos son criterios razonables tomados de cómo trabajan meteorólogos operativos, pero NO están calibrados con datos históricos reales todavía — es una guía adicional, no una certeza. " +
       "Recomendación general: toda la información brindada por la aplicación es una ayuda para la planificación, no un reemplazo del criterio profesional del guía u operador en el momento de la actividad.",
   },
 };
@@ -610,7 +611,7 @@ export default function Home() {
         </button>
       </div>
 
-      <p className="instrucciones">Hacé clic en el mapa (o buscá arriba) para ver el clima, sol/luna y contaminación lumínica del lugar.</p>
+      <p className="instrucciones-destacadas">👇 Hacé clic en el mapa (o buscá arriba) para ver el clima, sol/luna y contaminación lumínica del lugar</p>
 
       <MapContainer center={[-34.6037, -58.3816]} zoom={5} className="leaflet-container">
         <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
