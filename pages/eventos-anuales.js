@@ -114,7 +114,7 @@ export default function EventosAnuales() {
               <ul>
                 {g.eventos.map((e, i) => (
                   <li key={i}>
-                    {ICONO_POR_TIPO[e.tipo]} <strong>{e.nombre}</strong> —{" "}
+                    {e.tipo === "eclipse" ? (e.subtipo === "solar" ? "☀️" : "🌘") : ICONO_POR_TIPO[e.tipo]} <strong>{e.nombre}</strong> —{" "}
                     {new Date(e.fecha).toLocaleDateString("es-AR", { day: "numeric", month: "long" })}
                     {e.tipo === "lluvia" && <> · visibilidad: {e.calidadVisibilidad} (hasta {e.alturaMaximaGrados}°)</>}
                     <div className="mes-eventos-detalle">{e.detalle}</div>

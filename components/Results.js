@@ -238,7 +238,7 @@ export default function Results({ data, advice, descripcionNoche, descripcionFue
               ))}
               {data.eventosCelestes.eclipses?.map((e, i) => (
                 <li key={`ecl-${i}`}>
-                  🌘 Eclipse {e.tipo} ({e.clase}) el {new Date(e.fecha).toLocaleDateString("es-AR", { day: "numeric", month: "long" })}
+                  {e.tipo === "solar" ? "☀️" : "🌘"} Eclipse {e.tipo} ({e.clase}) el {new Date(e.fecha).toLocaleDateString("es-AR", { day: "numeric", month: "long" })}
                   {e.tipo === "solar" ? ` — obscuración ${e.obscuracion}% desde este lugar` : ""}
                 </li>
               ))}
