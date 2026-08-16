@@ -285,6 +285,7 @@ export default function Home() {
     setCoords(punto);
     setCentrarEn({ lat: fav.lat, lng: fav.lng, ts: Date.now() });
     setLugarNombre(fav.nombre);
+    setResultadosComparacion(null);
     calcularParaUbicacion(fav.lat, fav.lng);
   }
 
@@ -382,6 +383,7 @@ export default function Home() {
 
   function handleMapClick(latlng) {
     setCoords(latlng);
+    setResultadosComparacion(null);
     calcularParaUbicacion(latlng.lat, latlng.lng);
   }
 
@@ -494,6 +496,7 @@ export default function Home() {
     setCentrarEn({ lat: resultado.lat, lng: resultado.lon, ts: Date.now() });
     setResultadosBusqueda([]);
     setBusqueda(resultado.nombre);
+    setResultadosComparacion(null);
     calcularParaUbicacion(resultado.lat, resultado.lon);
   }
 

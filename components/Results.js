@@ -144,14 +144,16 @@ function Tarjeta({ icono, etiqueta, valor }) {
   );
 }
 
-function ImagenLunaReal({ iluminacion }) {
+function ImagenLunaReal({ iluminacion, fechaReferencia }) {
   const [url, setUrl] = useState(null);
   useEffect(() => {
-    fetch("/api/lunaImagen")
+    setUrl(null); // limpia la imagen vieja mientras carga la nueva
+    const parametro = fechaReferencia ? `?fecha=${new Date(fechaReferencia).toISOString().slice(0, 16)}` : "";
+    fetch(`/api/lunaImagen${parametro}`)
       .then((r) => r.json())
       .then((d) => setUrl(d.url))
       .catch(() => setUrl(null));
-  }, []);
+  }, [fechaReferencia]);
   if (!url) return null;
   return (
     <>
@@ -268,7 +270,7 @@ export default function Results({ data, advice, descripcionNoche, descripcionFue
         </div>
         {solLuna && (
           <div className="imagen-sol-luna">
-            <ImagenLunaReal iluminacion={solLuna.iluminacionLunarPorc} />
+            <ImagenLunaReal iluminacion={solLuna.iluminacionLunarPorc} fechaReferencia={solLuna.puestaSol} />
           </div>
         )}
       </div>
