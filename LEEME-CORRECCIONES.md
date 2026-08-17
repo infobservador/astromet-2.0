@@ -686,3 +686,13 @@ buena opción, con alta gratuita instantánea, sin trámite de aprobación manua
   cloud_cover_low/mid/high de Open-Meteo). Pesos heurísticos, igual que la fórmula
   que propusiste — no calibrados aún con la herramienta de verificación.
 - Se muestra en los resultados como "🌙 Índice de Noche Útil: X/100 — nivel".
+
+# Trigésimo cuarta: autenticación real para /admin
+- Antes: clave en texto plano reenviada en cada pedido (header), sin límite de intentos.
+- Ahora: login por sesión (cookie httpOnly), comparación resistente a timing attacks
+  (crypto.timingSafeEqual), y bloqueo tras 5 intentos fallidos por 15 min (usando Redis,
+  ya conectado). La clave real solo viaja una vez, al iniciar sesión.
+- Archivos nuevos: lib/adminAuth.js, lib/adminMiddleware.js, pages/api/admin/login.js.
+- pages/admin.js, operadores.js y verificarPronostico.js actualizados para usar sesión.
+- Sigue sin ser nivel bancario (no hay 2FA, ni registro de auditoría), pero ya no es
+  una clave compartida sin protección.

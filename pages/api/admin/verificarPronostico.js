@@ -1,10 +1,10 @@
 import { verificarPronostico } from "../../../lib/verificacionPronostico";
 import { parsearCoordenadas } from "../../../lib/validacion";
+import { autenticadoPorSesion } from "../../../lib/adminMiddleware";
 
 export default async function handler(req, res) {
-  const secret = req.headers["x-admin-secret"];
-  if (!process.env.ADMIN_SECRET || secret !== process.env.ADMIN_SECRET) {
-    return res.status(401).json({ error: "Clave de administrador incorrecta." });
+  if (!(await autenticadoPorSesion(req))) {
+    return res.status(401).json({ error: "Sesión inválida o expirada. Volvé a iniciar sesión en /admin." });
   }
 
   const { lat, lon, dias } = req.query;

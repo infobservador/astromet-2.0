@@ -1,15 +1,12 @@
-// Panel de administración de operadores (créditos). Protegido con ADMIN_SECRET:
-// solo quien conozca esa clave (vos) puede crear/editar operadores. No es un sistema
-// de autenticación sofisticado a propósito — es de uso interno, solo para vos.
+// Panel de administración de operadores (créditos). Protegido con sesión (cookie
+// httpOnly creada al iniciar sesión en /admin), no con la clave directa en cada
+// pedido — ver lib/adminAuth.js y pages/api/admin/login.js.
 import { guardarOperador, listarOperadores, eliminarOperador } from "../../../lib/creditos";
+import { autenticadoPorSesion } from "../../../lib/adminMiddleware";
 
 export default async function handler(req, res) {
-  const secret = req.headers["x-admin-secret"];
-  if (!process.env.ADMIN_SECRET) {
-    return res.status(500).json({ error: "Falta configurar ADMIN_SECRET en el servidor." });
-  }
-  if (secret !== process.env.ADMIN_SECRET) {
-    return res.status(401).json({ error: "Clave de administrador incorrecta." });
+  if (!(await autenticadoPorSesion(req))) {
+    return res.status(401).json({ error: "Sesión inválida o expirada. Volvé a iniciar sesión en /admin." });
   }
 
   try {

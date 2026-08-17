@@ -1,12 +1,12 @@
 // Panel de administración de operadores y créditos. Uso interno, solo para vos:
-// protegido con una clave simple (ADMIN_SECRET), no es un sistema de login sofisticado
-// a propósito. No está enlazado desde ningún botón de la app — se accede escribiendo
-// la dirección /admin directamente.
+// protegido con sesión por cookie httpOnly (ver lib/adminAuth.js), con límite de
+// intentos fallidos. No está enlazado desde ningún botón de la app — se accede
+// escribiendo la dirección /admin directamente.
 import { useState, useEffect } from "react";
 
 export default function Admin() {
   const [clave, setClave] = useState("");
-  const [claveGuardada, setClaveGuardada] = useState("");
+  const [sesionActiva, setSesionActiva] = useState(null); // null = todavía no se sabe
   const [operadores, setOperadores] = useState(null);
   const [error, setError] = useState("");
   const [cargando, setCargando] = useState(false);
@@ -15,33 +15,47 @@ export default function Admin() {
   const [nombre, setNombre] = useState("");
   const [creditos, setCreditos] = useState("10");
 
+  // Al entrar, probamos si ya hay una sesión válida (cookie) antes de pedir la clave.
   useEffect(() => {
-    const guardada = window.sessionStorage.getItem("astroturismo_admin_clave");
-    if (guardada) {
-      setClave(guardada);
-      // Antes solo se guardaba la clave, sin volver a pedir la lista de operadores —
-      // por eso, al refrescar la página, el panel se veía "vacío" aunque los datos
-      // seguían en la base. Ahora sí vuelve a cargarlos.
-      cargarOperadores(guardada);
-    }
+    cargarOperadores();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  async function cargarOperadores(claveAUsar) {
+  async function cargarOperadores() {
     setError("");
     setCargando(true);
     try {
-      const res = await fetch("/api/admin/operadores", {
-        headers: { "x-admin-secret": claveAUsar },
-      });
+      const res = await fetch("/api/admin/operadores");
+      if (res.status === 401) {
+        setSesionActiva(false);
+        return;
+      }
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || "Error");
       setOperadores(json);
-      setClaveGuardada(claveAUsar);
-      window.sessionStorage.setItem("astroturismo_admin_clave", claveAUsar);
+      setSesionActiva(true);
     } catch (err) {
       setError(err.message);
-      setOperadores(null);
+    } finally {
+      setCargando(false);
+    }
+  }
+
+  async function iniciarSesion() {
+    setError("");
+    setCargando(true);
+    try {
+      const res = await fetch("/api/admin/login", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ clave }),
+      });
+      const json = await res.json();
+      if (!res.ok) throw new Error(json.error || "Error");
+      setClave("");
+      await cargarOperadores();
+    } catch (err) {
+      setError(err.message);
     } finally {
       setCargando(false);
     }
@@ -53,7 +67,7 @@ export default function Admin() {
     try {
       const res = await fetch("/api/admin/operadores", {
         method: "POST",
-        headers: { "content-type": "application/json", "x-admin-secret": claveGuardada },
+        headers: { "content-type": "application/json" },
         body: JSON.stringify({ codigo, nombre, creditos: parseInt(creditos, 10) }),
       });
       const json = await res.json();
@@ -61,7 +75,7 @@ export default function Admin() {
       setCodigo("");
       setNombre("");
       setCreditos("10");
-      cargarOperadores(claveGuardada);
+      cargarOperadores();
     } catch (err) {
       setError(err.message);
     }
@@ -72,18 +86,26 @@ export default function Admin() {
     try {
       const res = await fetch("/api/admin/operadores", {
         method: "DELETE",
-        headers: { "content-type": "application/json", "x-admin-secret": claveGuardada },
+        headers: { "content-type": "application/json" },
         body: JSON.stringify({ codigo: codigoAEliminar }),
       });
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || "Error");
-      cargarOperadores(claveGuardada);
+      cargarOperadores();
     } catch (err) {
       setError(err.message);
     }
   }
 
-  if (!claveGuardada) {
+  if (sesionActiva === null) {
+    return (
+      <div style={{ maxWidth: 400, margin: "60px auto", padding: 20, fontFamily: "sans-serif" }}>
+        <p>Verificando sesión...</p>
+      </div>
+    );
+  }
+
+  if (!sesionActiva) {
     return (
       <div style={{ maxWidth: 400, margin: "60px auto", padding: 20, fontFamily: "sans-serif" }}>
         <h2>Panel de administración</h2>
@@ -92,9 +114,10 @@ export default function Admin() {
           type="password"
           value={clave}
           onChange={(e) => setClave(e.target.value)}
+          onKeyDown={(e) => e.key === "Enter" && iniciarSesion()}
           style={{ width: "100%", padding: 8, marginBottom: 10 }}
         />
-        <button onClick={() => cargarOperadores(clave)} disabled={cargando} style={{ padding: "8px 16px" }}>
+        <button onClick={iniciarSesion} disabled={cargando} style={{ padding: "8px 16px" }}>
           {cargando ? "Verificando..." : "Entrar"}
         </button>
         {error && <p style={{ color: "red" }}>{error}</p>}
@@ -106,7 +129,7 @@ export default function Admin() {
     <div style={{ maxWidth: 700, margin: "40px auto", padding: 20, fontFamily: "sans-serif" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
         <h2>Operadores y créditos</h2>
-        <button onClick={() => cargarOperadores(claveGuardada)} disabled={cargando} style={{ padding: "6px 14px" }}>
+        <button onClick={cargarOperadores} disabled={cargando} style={{ padding: "6px 14px" }}>
           {cargando ? "Actualizando..." : "🔄 Actualizar"}
         </button>
       </div>
@@ -151,12 +174,12 @@ export default function Admin() {
       </table>
       {(!operadores || operadores.length === 0) && <p>Todavía no hay operadores creados.</p>}
 
-      <VerificacionPronostico claveAdmin={claveGuardada} />
+      <VerificacionPronostico />
     </div>
   );
 }
 
-function VerificacionPronostico({ claveAdmin }) {
+function VerificacionPronostico() {
   const [lat, setLat] = useState("-34.6037");
   const [lon, setLon] = useState("-58.3816");
   const [dias, setDias] = useState("10");
@@ -169,9 +192,7 @@ function VerificacionPronostico({ claveAdmin }) {
     setError("");
     setResultado(null);
     try {
-      const res = await fetch(`/api/admin/verificarPronostico?lat=${lat}&lon=${lon}&dias=${dias}`, {
-        headers: { "x-admin-secret": claveAdmin },
-      });
+      const res = await fetch(`/api/admin/verificarPronostico?lat=${lat}&lon=${lon}&dias=${dias}`);
       const json = await res.json();
       if (!res.ok) throw new Error(json.error || "Error");
       setResultado(json.resultado);
