@@ -13,9 +13,6 @@
     "react-dom": "18.2.0",
     "leaflet": "^1.9.4",
     "react-leaflet": "^4.2.1",
-    "suncalc": "latest",
-    "jspdf": "^2.5.1",
-    "@upstash/redis": "^1.31.0",
-    "astronomy-engine": "^2.1.19"
+    "suncalc": "latest"
   }
 }
